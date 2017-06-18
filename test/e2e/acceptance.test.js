@@ -1,7 +1,7 @@
 // @flow
 import { assert } from 'chai'
 
-import HomePage from './pageobjects/LoginPage'
+import HomePage from './pageobjects/HomePage'
 
 import DriverBuilder from './lib/DriverBuilder'
 import driverutils from './lib/driver-utils'
@@ -20,12 +20,12 @@ describe('e2e Tests', function () {
     }
   })
 
-  it('Loads the login page', async function () {
+  it('Loads the page', async function () {
     for (let browser of browsers) {
       const homePage = new HomePage(browser.driver)
       await homePage.isLoaded()
-      const title = await homePage.getTitle()
-      assert.strictEqual(title, 'v0.1', 'Title should match expected tagline')
+      const content = await homePage.getContent()
+      assert.strictEqual(content, '', 'Content should be empty')
     }
   })
 
