@@ -1,5 +1,5 @@
 // @flow
-import { Hub } from '@/lib/c137/hub'
+import { Hub } from '@/lib/C137/hub'
 
 const wh = new Hub()
 

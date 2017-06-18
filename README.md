@@ -1,9 +1,9 @@
-# minutus
+# epigrams
 
 [![Build Status][build-image]][build-url]
 
-[build-url]: https://travis-ci.org/benitogf/minutus
-[build-image]: https://img.shields.io/travis/benitogf/minutus/master.svg?style=flat-square
+[build-url]: https://travis-ci.org/benitogf/epigrams
+[build-image]: https://img.shields.io/travis/benitogf/epigrams/master.svg?style=flat-square
 
 > A Vue.js project
 
@@ -19,7 +19,10 @@ npm start
 # build for production
 npm run build
 
-# serve production at localhost:9000
+# build library
+npm run build:lib
+
+# serve production at localhost:9009
 npm run serve
 
 # run unit tests
