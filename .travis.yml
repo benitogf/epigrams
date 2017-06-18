@@ -5,7 +5,7 @@ node_js:
   - "6"
 
 addons:
-  firefox: "52.2.0"
+  firefox: "53.0.3"
 
 install:
   - npm install
