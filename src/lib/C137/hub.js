@@ -1,6 +1,6 @@
 // @flow
-import { Item } from '@/lib/c137/item'
-import { session } from '@/lib/c137/session'
+import { Item } from '@/lib/C137/item'
+import { session } from '@/lib/C137/session'
 
 const hub = {
   set (hub) {
