@@ -1,6 +1,12 @@
 // @flow
 const indexedDB = {
-  _get: async function (keys) {
+  create: async function () {
+
+  },
+  update: async function () {
+
+  },
+  get: async function (keys) {
     let db = await this.__operate()
     let result = await db.items.where('id').equals(keys.join(':')).toArray()
     if (result[0]) {
@@ -9,7 +15,7 @@ const indexedDB = {
       throw new Error('GET_FAIL')
     }
   },
-  _getAll: async function (keys) {
+  getAll: async function (keys) {
     let db = await this.__operate()
     let result = await db.items.filter(function (item) {
       return item.id.indexOf(keys.join(':') + ':') === 0
@@ -20,34 +26,34 @@ const indexedDB = {
       throw new Error('GET_ALL_FAIL')
     }
   },
-  _set: async function (keys, data) {
+  set: async function (keys, data) {
     let db = await this.__operate()
     return await db.items.put({ id: keys.join(':'), data: data })
   },
-  _setMany: async function (data) {
+  setMany: async function (data) {
     let db = await this.__operate()
     return await db.items.bulkPut(data)
   },
-  _del: async function (keys, key) {
+  del: async function (keys, key) {
     let db = await this.__operate()
     await db.items.where('id').equals(keys.join(':')).delete()
     return key
   },
-  _delSome: async function (keys) {
+  delSome: async function (keys) {
     let db = await this.__operate()
     await db.items.filter(function (item) {
       return keys.indexOf(item.id) !== -1
     }).delete()
     return keys
   },
-  _delAll: async function (keys) {
+  delAll: async function (keys) {
     let db = await this.__operate()
     await db.items.filter(function (item) {
       return item.id.indexOf(keys.join(':') + ':') === 0
     }).delete()
     return keys
   },
-  _free: async function (keys) {
+  free: async function (keys) {
     let db = await this.__operate()
     let result = await db.items.where('id')
       .equals(keys.join(':'))
@@ -58,7 +64,7 @@ const indexedDB = {
       throw new Error('IS_NOT_FREE')
     }
   },
-  _exist: async function (keys) {
+  exist: async function (keys) {
     let db = await this.__operate()
     let result = await db.items.where('id')
       .equals(keys.join(':'))

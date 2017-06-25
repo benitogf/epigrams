@@ -7,11 +7,9 @@
 <script>
 export default {
   name: 'app',
-  toolbar: true,
-  methods: {}
+  toolbar: true
 }
 </script>
-
 <style lang="scss">
 html {
   height: 100%;
@@ -20,21 +18,8 @@ body {
   margin: 0;
   height: 100%;
   min-height: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
-/* Tell Quill not to scroll */
-.quill-container {
-  height: auto;
-  min-height: 100%;
-  padding: 50px;
-  padding: 0;
-}
-.quill-container .ql-editor {
-  font-size: 18px;
-  overflow-y: visible;
-}
-/* Enter and leave animations can use different */
-/* durations and timing functions.              */
 .slide-fade-enter-active {
   transition: all .5s ease;
 }

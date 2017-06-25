@@ -1,5 +1,8 @@
 <template>
   <div class="vue-quill">
+    <h3 class="status" v-bind:class="{
+      active: status !== ''
+    }">{{ status }}</h3>
     <div class="ui attached segment"
       ref="quill"
       @click.prevent="focusEditor">
@@ -11,9 +14,52 @@
 import _ from 'lodash'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
-import GrammarlyInline from '@/lib/quill/formats/GrammarlyInline'
 import { ImageDrop } from '@/lib/quill/formats/image-drop'
 import wh from '@/lib/C137'
+import spinners from 'cli-spinners'
+const freq = 80
+
+function loaderStart (self) {
+  let loadSeq = spinners.dots12.frames
+  let frame = 0
+  if (!self.loading) {
+    self.loading = setInterval(() => {
+      self.status = loadSeq[frame]
+      if (frame < loadSeq.length) {
+        frame++
+      } else {
+        frame = 0
+      }
+    }, freq)
+  }
+  return self.loading
+}
+
+function loaderStop (self) {
+  clearInterval(self.loading)
+  self.status = ''
+  self.loading = null
+}
+
+function debounce (inner, ms = 0) {
+  let timer = null
+  let resolves = []
+  // https://stackoverflow.com/a/35228455
+
+  return function (...args) {
+    // Run the function after a certain amount of time
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      // Get the result of the inner function, then apply it to the resolve function of
+      // each promise that has been created since the last time the inner function was run
+      let result = inner(...args)
+      resolves.forEach(r => r(result))
+      resolves = []
+    }, ms)
+
+    return new Promise((resolve) => resolves.push(resolve))
+  }
+}
 
 export default {
   model: {
@@ -22,12 +68,6 @@ export default {
   props: {
     content: {},
     formats: {
-      type: Array,
-      default () {
-        return []
-      }
-    },
-    keyBindings: {
       type: Array,
       default () {
         return []
@@ -45,6 +85,7 @@ export default {
   data () {
     return {
       editor: {},
+      status: '/',
       defaultConfig: {
         modules: {
           imageDrop: true,
@@ -59,58 +100,31 @@ export default {
     }
   },
   async mounted () {
-    // const key = ['public', this.$el.id]
-    await wh.hub.upsert('public', 'public')
-    if (this.keyBindings.length) {
-      this.defaultConfig.modules.keyboard = {
-        bindings: this.keyBindings.map((binding) => {
-          if (binding.remove) return false
-          return {
-            key: binding.key,
-            metaKey: true,
-            handler: binding.method.bind(this)
-          }
-        })
-      }
-    }
-
-    Quill.register(GrammarlyInline)
+    loaderStart(this)
+    await wh.hub.upsert('public', 'public') // init
     Quill.register('modules/imageDrop', ImageDrop)
     this.editor = new Quill(this.$refs.quill, _.defaultsDeep(this.config, this.defaultConfig))
 
-    if (this.content && this.content !== '') {
-      if (this.output !== 'delta') {
-        this.editor.pasteHTML(this.content)
-      } else {
-        this.editor.setContents(this.content)
-      }
-    } else {
-      let content = ''
-      try {
-        content = await wh.item.get(this.$el.id)
-        this.editor.setContents(content.data)
-      } catch (e) {
-        this.editor.setContents('')
-      }
+    try {
+      let content = await wh.item.get(this.$el.id) // read
+      this.editor.setContents(content.data)
+    } catch (e) {
+      this.editor.setContents('')
     }
 
-    this.editor.on('text-change', async (delta, source) => {
-      this.$emit('text-change', this.editor, delta, source)
+    loaderStop(this)
+    let update = debounce(async (delta, source) => {
+      loaderStart(this)
       try {
-        let data = {
-          name: this.$el.id,
-          data: this.editor.getContents()
-        }
-        await wh.item.set(data)
+        let label = this.$el.id
+        let data = this.editor.getContents()
+        await wh.item.set({ label, data }) // write
       } catch (e) {
-        console.log(e)
+        return e
       }
-      this.$emit('input', this.output !== 'delta' ? this.editor.root.innerHTML : this.editor.getContents())
-    })
-
-    this.editor.on('selection-change', (range) => {
-      this.$emit('selection-change', this.editor, range)
-    })
+      loaderStop(this)
+    }, freq * 15)
+    this.editor.on('text-change', update)
   },
 
   methods: {
@@ -129,14 +143,46 @@ export default {
       }
 
       this.editor.focus()
-      // this.editor.setSelection(this.editor.getLength() - 1, this.editor.getLength())
     }
   }
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .vue-quill {
+  height: auto;
+  min-height: 100%;
+  padding: 50px;
+  padding: 0;
   height: inherit;
+  .ql-container.ql-snow {
+    border: none;
+  }
+  .ql-toolbar.ql-snow {
+    border: none;
+    border-bottom: 2px solid black;
+  }
+  .ql-editor {
+    font-size: 18px;
+    overflow-y: auto;
+    padding: 12px 15px 70px 15px !important;
+  }
+}
+.status {
+  &.active {
+    background-color: black;
+    color: white;
+  }
+  padding-top: 5px;
+  position: fixed;
+  top: 0;
+  width: 60px;
+  height: 37px;
+  color: white;
+  background-color: transparent;
+  margin: 0;
+  right: 0;
+  text-align: center;
+  z-index: 999;
 }
 </style>

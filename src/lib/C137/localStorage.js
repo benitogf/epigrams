@@ -1,5 +1,11 @@
 // @flow
 const localStorage = {
+  create: async function () {
+
+  },
+  update: async function () {
+
+  },
   get: function (keys) {
     return new Promise(function (resolve, reject) {
       try {

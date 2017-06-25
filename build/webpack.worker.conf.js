@@ -7,7 +7,7 @@ const baseWebpackConfig = require('./webpack.base.conf')
 const config = require('../config')
 
 // location of where to generate the distribution bundle
-const distDir = path.resolve('./')
+const distDir = path.resolve('./static')
 
 var env = process.env.NODE_ENV === 'testing'
   ? require('../config/test.env')
@@ -17,13 +17,13 @@ module.exports =  merge(baseWebpackConfig, {
 	// we're running this from node, not a browser
 	target: 'web',
 	// pull in all our test source files into the bundle
-	entry: './src/lib/c137/index.js',
+	entry: './src/lib/c137/worker.js',
 	output: {
 		// location of the output directory
 		path: distDir,
 		// the resulting built file will be in dist/bundle.js
-		filename: 'hub.js',
-    libraryTarget: 'umd'
+		filename: 'worker.js',
+    libraryTarget: 'var'
 	},
 	resolve: {
 		// only compile js and vue file extensions

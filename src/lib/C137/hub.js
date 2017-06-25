@@ -3,22 +3,24 @@ import { Item } from '@/lib/C137/item'
 import { session } from '@/lib/C137/session'
 
 const hub = {
-  set (hub) {
-    return this._set(['hub', hub.id], this.session.compress(hub))
+  async set (hub) {
+    let pack = await this.session.pack(hub, 'public')
+    return await this.set(['hub', hub.id], pack)
   },
 
   async getAll () {
     let keys = ['hub']
-    let hubs = await this._getAll(keys)
+    let hubs = await this.getAll(keys)
     var result = []
-    hubs.forEach((hub) => {
-      result.push(this.session.uncompress(hub.data))
-    })
+    for (let hub of hubs) {
+      let data = await this.session.unpack(hub.data, 'public')
+      result.push(data)
+    }
     return result
   },
 
-  select (key, keyword) {
-    this.session.setKeyword(keyword, key)
+  async select (key, keyword) {
+    await this.session.setKeyword(keyword, key)
     return this.item.getAll()
   },
 
@@ -30,27 +32,27 @@ const hub = {
       updated: now
     }
     var keys = ['hub', key]
-    await this._free(keys)
+    await this.free(keys)
     await this.hub.set(hub)
-    this.session.setKeyword(keyword, key)
+    await this.session.setKeyword(keyword, key)
     return hub
   },
 
   async update (key, newKey, newKeyword) {
-    const selectedHub = this.session.get()
-    if (session && selectedHub.id === key) {
-      await this._free(['hub', newKey])
-      await this._exist(['hub', key])
-      let data = await this._exist(['hub', key])
+    const selectedHub = await this.session.get()
+    if (selectedHub && selectedHub.id === key) {
+      await this.free(['hub', newKey])
+      await this.exist(['hub', key])
+      let data = await this.get(['hub', key])
       let items = await this.item.getAll()
-      await this._delAll(['item', key])
-      await this._del(['hub', key])
-      let hub = this.session.uncompress(data)
+      await this.delAll(['item', key])
+      await this.del(['hub', key])
+      let hub = await this.session.unpack(data, 'public')
       hub.id = newKey
       hub.updated = Date.now() / 1000
       await this.hub.set(hub)
       var keyword = newKeyword || selectedHub.keyword
-      this.session.setKeyword(keyword, newKey)
+      await this.session.setKeyword(keyword, newKey)
       await this.item.setMany(items)
       this.session.clearKeyword()
       return newKey
@@ -61,17 +63,18 @@ const hub = {
 
   async upsert (key, keyword) {
     try {
-      return await this.hub.select(key, keyword)
+      await this.exist(['hub', key])
+      await this.hub.select(key, keyword)
     } catch (e) {
       return await this.hub.create(key, keyword)
     }
   },
 
   async delete (id) {
-    const hub = this.session.getHub()
+    const hub = await this.session.getHub()
     if (hub === id) {
-      await this._delAll(['item', hub])
-      await this._del(['hub', id])
+      await this.delAll(['item', hub])
+      await this.del(['hub', id])
       let hubs = await this.hub.getAll()
       this.session.clearKeyword()
       return hubs

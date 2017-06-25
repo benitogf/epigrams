@@ -1,26 +1,27 @@
 // @flow
 import wh from '@/lib/C137'
+import _ from 'lodash'
 import { expect } from 'chai'
 
 describe('Warehouse service', function () {
-  var content = 'ふっかつ　あきる　すぶり　はやい　つける　まゆげ　たんさん　みんぞく　ねほりはほり　せまい　たいまつばな　ひはん'
+  var data = 'Δευτέρα - Σάββατο 09.00-17.00 Κυριακές & Αργίες Κλειστό'
   var testItem = {
-    name: 'A test name',
-    content: content
+    label: 'Δευτέρα - Σάββατο 09.00-17.00 Κυριακές & Αργίες Κλειστό',
+    data: data
   }
   var newTestItem = {
-    name: 'A new test name',
-    content: content
+    label: 'A new test name',
+    data: data
   }
   var fakeItem = {
-    name: 'A fake name',
-    content: ''
+    label: 'A fake name',
+    data: ''
   }
   var testHubKey = 'testHub'
   var newTestHubKey = 'testHubNew'
   var testKeyword = 'testKeyword1'
   var newTestKeyword = 'newTestKeyword1'
-  var testId = '6e6a5910ea9537a7d02e44975f4765726c4a0237c7132d3ea4cf33be76ce678b'
+  var testId = '3acefc89f8d1665ef55d615fe6ed55e5cc1282a3994ef0c26eb11ab888ddbde0'
   var newTestId = '3941b238daab168b5b742ef81603cd2c71fb83aa75b0a8044cc414561d7bf81a'
 
   it('should delete test hub', async function () {
@@ -58,7 +59,7 @@ describe('Warehouse service', function () {
   // Items
   it('should create an item', async function () {
     await wh.hub.select(testHubKey, testKeyword)
-    let hub = wh.session.getHub()
+    let hub = await wh.session.getHub()
     await wh.item.delSome([testId, newTestId])
     let newItemId = await wh.item.create(testItem)
     expect(newItemId).to.eq('item:' + hub + ':' + testId)
@@ -66,40 +67,54 @@ describe('Warehouse service', function () {
     expect(items.length).to.eq(1)
   })
   it('should get an item', async function () {
-    let item = await wh.item.get(testItem.name)
+    let item = await wh.item.get(testItem.label)
     expect(item.id).to.eq(testId)
   })
   it('should update an item', async function () {
     let otherItem = {}
-    let hub = wh.session.getHub()
+    let hub = await wh.session.getHub()
     Object.assign(otherItem, newTestItem)
+    otherItem.label = newTestItem.label
     otherItem.id = testId
     let newId = await wh.item.update(otherItem)
     expect(newId).to.eq('item:' + hub + ':' + newTestId)
   })
-  it('should fail to get an item with a nonexistent key', async function () {
+  it('should fail to get the updated item', async function () {
+    let eq
     try {
-      let data = await wh.item.get('FakeKey')
-      return new Error('got nonexistent item key data: ' + data)
+      let items = await wh.item.getAll()
+      eq = _.find(items, ['id', testId])
     } catch (e) {
       return e
     }
+    expect(eq).to.eq(undefined)
+  })
+  it('should fail to get an item with a nonexistent key', async function () {
+    let data
+    try {
+      data = await wh.item.get('FakeKey')
+    } catch (e) {
+      return e
+    }
+    expect(data).to.eq(undefined)
   })
   it('should fail to update a nonexistent item', async function () {
+    let data
     try {
-      await wh.item.update(fakeItem)
-      return new Error('updated nonexistent item')
+      data = await wh.item.update(fakeItem)
     } catch (e) {
       return e
     }
+    expect(data).to.eq(undefined)
   })
   it('should fail to create duplicated items', async function () {
+    let data
     try {
-      await wh.item.create(newTestItem)
-      return new Error('created duplicated item')
+      data = await wh.item.create(newTestItem)
     } catch (e) {
       return e
     }
+    expect(data).to.eq(undefined)
   })
   it('should remove an item', async function () {
     let newItems = await wh.item.delSome([newTestId])
@@ -123,12 +138,13 @@ describe('Warehouse service', function () {
     expect(hub.id).to.eq(testHubKey)
   })
   it('should fail to update a nonexistent hub', async function () {
+    let data
     try {
       await wh.hub.update('fakeHub', newTestHubKey)
-      return new Error('nonexistent hub updated')
     } catch (e) {
       return e
     }
+    expect(data).to.eq(undefined)
   })
   it('should delete test hub', async function () {
     let hubs = await wh.hub.getAll()
