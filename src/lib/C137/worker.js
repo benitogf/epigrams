@@ -46,7 +46,6 @@ const session = {
   }
 }
 
-/* eslint-disable no-undef */
 global.onmessage = function (e) {
   var args = session.uncompress(e.data)
   var workerResult = null
