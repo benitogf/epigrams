@@ -26,7 +26,7 @@ describe('Warehouse service', function () {
 
   it('should create a hub', async function () {
     try {
-       await wh.hub.select(testHubKey, testKeyword)
+      await wh.hub.select(testHubKey, testKeyword)
       await wh.hub.delete(testHubKey)
     } catch (e) {
       console.log(e)
