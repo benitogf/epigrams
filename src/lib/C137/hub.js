@@ -57,7 +57,9 @@ const hub = {
       this.session.clearKeyword()
       return newKey
     } else {
-      return new Promise((resolve, reject) => reject(new Error('UPDATE_HUB_NOT_SELECTED')))
+      return new Promise((resolve, reject) => {
+        reject(new Error('UPDATE_HUB_NOT_SELECTED'))
+      })
     }
   },
 
@@ -79,7 +81,9 @@ const hub = {
       this.session.clearKeyword()
       return hubs
     } else {
-      return new Promise((resolve, reject) => reject(new Error('DELETE_HUB_NOT_SELECTED')))
+      return new Promise((resolve, reject) => {
+        reject(new Error('DELETE_HUB_NOT_SELECTED'))
+      })
     }
   }
 }

@@ -22,7 +22,10 @@ const localStorage = {
         var data = []
         for (var i = 0; i < window.localStorage.length; i++) {
           if (window.localStorage.key(i).indexOf(keys.join(':') + ':') === 0) {
-            data.push({ id: window.localStorage.key(i), data: window.localStorage.getItem(window.localStorage.key(i)) })
+            data.push({
+              id: window.localStorage.key(i),
+              data: window.localStorage.getItem(window.localStorage.key(i))
+            })
           }
         }
         resolve(data)

@@ -24,27 +24,24 @@ describe('Warehouse service', function () {
   var testId = '3acefc89f8d1665ef55d615fe6ed55e5cc1282a3994ef0c26eb11ab888ddbde0'
   var newTestId = '3941b238daab168b5b742ef81603cd2c71fb83aa75b0a8044cc414561d7bf81a'
 
-  it('should delete test hub', async function () {
-    let hubs = await wh.hub.getAll()
-    let hubIds = hubs.map((x) => x.id)
-    if (hubIds.indexOf(testHubKey) !== -1) {
-      await wh.hub.select(testHubKey, testKeyword)
+  it('should create a hub', async function () {
+    try {
+       await wh.hub.select(testHubKey, testKeyword)
       await wh.hub.delete(testHubKey)
+    } catch (e) {
+      console.log(e)
     }
-  })
-  it('should delete other test hub', async function () {
-    let hubs = await wh.hub.getAll()
-    let hubIds = hubs.map((x) => x.id)
-    if (hubIds.indexOf(newTestHubKey) !== -1) {
+    try {
       await wh.hub.select(newTestHubKey, newTestKeyword)
       await wh.hub.delete(newTestHubKey)
+    } catch (e) {
+      console.log(e)
     }
-  })
-  it('should create a hub', async function () {
     let hub = await wh.hub.create(testHubKey, testKeyword)
     expect(hub.id).to.eq(testHubKey)
   })
   it('should get a list of hubs', async function () {
+    await wh.hub.select(testHubKey, testKeyword)
     let hubs = await wh.hub.getAll()
     expect(hubs).to.be.an.instanceOf(Array)
   })
@@ -67,7 +64,7 @@ describe('Warehouse service', function () {
     expect(items.length).to.eq(1)
   })
   it('should get an item', async function () {
-    let item = await wh.item.get(testItem.label)
+    let item = await wh.item.get(testId)
     expect(item.id).to.eq(testId)
   })
   it('should update an item', async function () {
@@ -127,10 +124,11 @@ describe('Warehouse service', function () {
     expect(newItems.map((x) => x.id).indexOf(newTestId)).to.eq(-1)
   })
   it('should update a hub', async function () {
+    let now = Date.now()
     await wh.hub.select(testHubKey, testKeyword)
-    await wh.hub.update(testHubKey, newTestHubKey, newTestKeyword)
+    await wh.hub.update(testHubKey, newTestHubKey + now, newTestKeyword)
     let hubs = await wh.hub.getAll()
-    expect(hubs.map((x) => x.id).indexOf(newTestHubKey)).to.not.be.eq(-1)
+    expect(hubs.map((x) => x.id).indexOf(newTestHubKey + now)).to.not.be.eq(-1)
     expect(hubs.map((x) => x.id).indexOf(testHubKey)).to.eq(-1)
   })
   it('should create a hub with previously used id', async function () {
@@ -145,21 +143,5 @@ describe('Warehouse service', function () {
       return e
     }
     expect(data).to.eq(undefined)
-  })
-  it('should delete test hub', async function () {
-    let hubs = await wh.hub.getAll()
-    let hubIds = hubs.map((x) => x.id)
-    if (hubIds.indexOf(testHubKey) !== -1) {
-      await wh.hub.select(testHubKey, testKeyword)
-      await wh.hub.delete(testHubKey)
-    }
-  })
-  it('should delete other test hub', async function () {
-    let hubs = await wh.hub.getAll()
-    let hubIds = hubs.map((x) => x.id)
-    if (hubIds.indexOf(newTestHubKey) !== -1) {
-      await wh.hub.select(newTestHubKey, newTestKeyword)
-      await wh.hub.delete(newTestHubKey)
-    }
   })
 })

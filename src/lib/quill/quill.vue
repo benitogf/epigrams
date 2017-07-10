@@ -50,8 +50,10 @@ function debounce (inner, ms = 0) {
     // Run the function after a certain amount of time
     clearTimeout(timer)
     timer = setTimeout(() => {
-      // Get the result of the inner function, then apply it to the resolve function of
-      // each promise that has been created since the last time the inner function was run
+      // Get the result of the inner function, then apply it
+      // to the resolve function of
+      // each promise that has been created since the last
+      // time the inner function was run
       let result = inner(...args)
       resolves.forEach(r => r(result))
       resolves = []
@@ -61,12 +63,87 @@ function debounce (inner, ms = 0) {
   }
 }
 
+async function getDelta (label) {
+  try {
+    let id = await wh.session.hash(label)
+    let content = await wh.item.get(id) // read
+    let index = 0
+    var images = []
+    for (let dt of content.data.ops) {
+      let img = dt.insert.image
+      if (img && img.indexOf('data:image') === -1) {
+        let id = img
+        images.push(id)
+        let image
+        try {
+          image = await wh.item.get(id)
+        } catch (e) {
+          image = { data: '' }
+        }
+        content.data.ops[index].insert.image = image.data
+      }
+      index++
+    }
+    return { content, images }
+  } catch (e) {
+    return {}
+  }
+}
+
+async function saveDelta (label, data) {
+  let index = 0
+  let images = []
+  for (let dt of data.ops) {
+    let img = dt.insert.image
+    if (img && img.indexOf('data:image') === 0) {
+      let id = await wh.session.hash(label + 'img' + img)
+      try {
+        images.push(id)
+        await wh.item.create({ id, data: img })
+      } catch (e) {
+      }
+      data.ops[index].insert.image = id
+    }
+    index++
+  }
+  await wh.item.set({ label, data }) // write
+  return images
+}
+
+async function updateTrash (label, images) {
+  let store
+  try {
+    let id = await wh.session.hash(label + ':images')
+    store = await wh.item.get(id)
+  } catch (e) {
+    store = { data: images }
+  }
+  let trash = store.data.filter((nf) => images.indexOf(nf) === -1)
+  await wh.item.set({
+    label: label + ':images',
+    data: images.concat(trash)
+  })
+}
+
+async function clean (label, images) {
+  let id = await wh.session.hash(label + ':images')
+  let trash = []
+  try {
+    let store = await wh.item.get(id)
+    for (let img of store.data) {
+      if (images.indexOf(img) === -1) {
+        trash.push(img)
+      }
+    }
+    await wh.item.delSome(trash)
+    await wh.item.set({ id, data: images })
+  } catch (e) {
+    await wh.item.set({ id, data: trash })
+  }
+}
+
 export default {
-  model: {
-    prop: 'content'
-  },
   props: {
-    content: {},
     formats: {
       type: Array,
       default () {
@@ -92,7 +169,7 @@ export default {
           toolbar: [
             [{ header: [1, 2, false] }],
             ['bold', 'italic', 'underline'],
-            ['image', 'code-block']
+            ['image']
           ]
         },
         theme: 'snow'
@@ -103,24 +180,28 @@ export default {
     loaderStart(this)
     await wh.hub.upsert('public', 'public') // init
     Quill.register('modules/imageDrop', ImageDrop)
-    this.editor = new Quill(this.$refs.quill, _.defaultsDeep(this.config, this.defaultConfig))
-
-    try {
-      let content = await wh.item.get(this.$el.id) // read
+    this.editor = new Quill(this.$refs.quill,
+      _.defaultsDeep(this.config, this.defaultConfig))
+    let label = this.$el.id
+    let delta = await getDelta(label)
+    let content = delta.content
+    let images = delta.images
+    if (content) {
       this.editor.setContents(content.data)
-    } catch (e) {
+    } else {
       this.editor.setContents('')
     }
-
+    clean(label, images)
     loaderStop(this)
     let update = debounce(async (delta, source) => {
       loaderStart(this)
       try {
         let label = this.$el.id
         let data = this.editor.getContents()
-        await wh.item.set({ label, data }) // write
+        let images = await saveDelta(label, data)
+        updateTrash(label, images)
       } catch (e) {
-        return e
+        await saveDelta(label, { data: '' })
       }
       loaderStop(this)
     }, freq * 15)
@@ -155,8 +236,14 @@ export default {
   padding: 50px;
   padding: 0;
   height: inherit;
+  .ql-toolbar.ql-snow {
+    position: fixed;
+    z-index: 4;
+    width: 100%;
+  }
   .ql-container.ql-snow {
     border: none;
+    padding-top: 41px;
   }
   .ql-toolbar.ql-snow {
     border: none;

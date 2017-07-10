@@ -56,7 +56,7 @@ module.exports = function(config) {
       'karma-mocha-reporter',
       'karma-chrome-launcher',
       'karma-firefox-launcher',
-      'karma-phantomjs2-launcher',
+      'karma-phantomjs-launcher',
       // 'karma-slimerjs-launcher'
     ],
     // web server port

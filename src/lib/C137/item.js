@@ -11,7 +11,9 @@ const item = {
       let data = await this.session.pack(item, selectedHub.keyword)
       return this.set(['item', selectedHub.id, item.id], data)
     } else {
-      return new Promise((resolve, reject) => reject(new Error('SET_ITEM_NOT_SELECTED')))
+      return new Promise((resolve, reject) => {
+        reject(new Error('SET_ITEM_NOT_SELECTED'))
+      })
     }
   },
 
@@ -21,7 +23,9 @@ const item = {
       var newItems = await this.item.pack(items, selectedHub)
       return this.setMany(newItems)
     } else {
-      return new Promise((resolve, reject) => reject(new Error('SET_ITEMS_NOT_SELECTED')))
+      return new Promise((resolve, reject) => {
+        reject(new Error('SET_ITEMS_NOT_SELECTED'))
+      })
     }
   },
 
@@ -29,14 +33,21 @@ const item = {
     const selectedHub = await this.session.get()
     if (selectedHub) {
       var now = Date.now() / 1000
-      item.id = await this.session.hash(item.label)
+      if (!item.label) {
+        item.label = await this.session.hash(item.data)
+      }
+      if (!item.id) {
+        item.id = await this.session.hash(item.label)
+      }
       item.created = now
       item.updated = now
       var keys = ['item', selectedHub.id, item.id]
       await this.free(keys)
       return this.item.set(item)
     } else {
-      return new Promise((resolve, reject) => reject(new Error('CREATE_ITEM_NOT_SELECTED')))
+      return new Promise((resolve, reject) => {
+        reject(new Error('CREATE_ITEM_NOT_SELECTED'))
+      })
     }
   },
 
@@ -44,8 +55,11 @@ const item = {
     const selectedHub = await this.session.get()
     if (selectedHub) {
       var oldKeys = ['item', selectedHub.id, item.id]
-      let id = await this.session.hash(item.label)
-      var keys = ['item', selectedHub.id, id]
+      if (!item.label) {
+        item.label = await this.session.hash(item.data)
+      }
+      item.id = await this.session.hash(item.label)
+      var keys = ['item', selectedHub.id, item.id]
       try {
         await this.exist(oldKeys)
         await this.free(keys)
@@ -58,18 +72,19 @@ const item = {
         throw e
       }
     } else {
-      return new Promise((resolve, reject) => reject(new Error('UPDATE_ITEM_NOT_SELECTED')))
+      return new Promise((resolve, reject) => {
+        reject(new Error('UPDATE_ITEM_NOT_SELECTED'))
+      })
     }
   },
 
   async upsert (item) {
+    let hub = await this.session.getHub()
     try {
-      let hub = await this.session.getHub()
       await this.free(['item', hub, item.id])
       return this.item.create(item)
     } catch (e) {
-      // let hub = await this.hub.select(item)
-      return this.item.set(item)
+      return this.item.update(item)
     }
   },
 
@@ -82,15 +97,17 @@ const item = {
       })
       return this.delSome(toDel)
     } else {
-      return new Promise(function (resolve, reject) { reject(new Error('DELETE_ITEMS_NOT_SELECTED')) })
+      return new Promise((resolve, reject) => {
+        reject(new Error('DELETE_ITEMS_NOT_SELECTED'))
+      })
     }
   },
 
-  async get (label) {
+  async get (id) {
     const selectedHub = await this.session.get()
     if (selectedHub) {
       try {
-        let id = await this.session.hash(label)
+        // let id = await this.session.hash(label)
         let keys = ['item', selectedHub.id, id]
         let data = await this.get(keys)
         var dec = await this.session.unpack(data, selectedHub.keyword)
@@ -103,10 +120,13 @@ const item = {
     }
   },
 
-  async getAll () {
+  async getAll (filter) {
     const selectedHub = await this.session.get()
     if (selectedHub) {
-      var keys = ['item', selectedHub.id]
+      let keys = ['item', selectedHub.id]
+      if (filter) {
+        keys.concat(filter)
+      }
       let items = await this.getAll(keys)
       try {
         return this.item.unpack(items, selectedHub)

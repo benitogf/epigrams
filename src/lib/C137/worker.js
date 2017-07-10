@@ -3,6 +3,43 @@ import jsonpack from 'jsonpack'
 import aes from 'browserify-aes'
 import createHash from 'sha.js'
 const session = {
+  // dice (keys, data) {
+  //   let exceed = data.length > 10000
+  //   let step = exceed ? 10000 : data.length
+  //   let ops = []
+  //   let eos = false
+  //   let i = 0
+  //   let result = []
+  //   while (!eos) {
+  //     eos = (i + step) >= data.length
+  //     let next = eos ? data.length : i + step
+  //     ops.push(data.slice(i, next))
+  //     i += step
+  //   }
+  //   ops.forEach((chunk, i) => {
+  //     result.push({ id: keys.join(':') + ':' + i, data: chunk })
+  //   })
+  //   return result
+  // },
+  //
+  // undice (query) {
+  //   let result = []
+  //   let sorted = query.map((chunk) => {
+  //     return chunk.id
+  //   })
+  //   sorted.sort((a, b) => {
+  //     return parseInt(a.split(':').pop()) - parseInt(b.split(':').pop())
+  //   })
+  //   sorted.forEach((id) => {
+  //     query.forEach((chunk) => {
+  //       if (chunk.id === id) {
+  //         result.push(chunk.data)
+  //       }
+  //     })
+  //   })
+  //   return result.join()
+  // },
+
   encrypt (txt, pwd) {
     try {
       let cipher = aes.createCipher('aes-256-cbc', pwd)
@@ -42,7 +79,8 @@ const session = {
   },
 
   unpack (data, keyword) {
-    return session.uncompress(session.decrypt(data, keyword))
+    let dec = session.decrypt(data, keyword)
+    return session.uncompress(dec)
   }
 }
 

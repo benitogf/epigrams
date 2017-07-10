@@ -16,6 +16,7 @@ export class ImageDrop {
     // bind handlers to this instance
     this.handleDrop = this.handleDrop.bind(this)
     this.handlePaste = this.handlePaste.bind(this)
+    this.quill.addContainer('ql-thumbs')
     // listen for drop and paste events
     this.quill.root.addEventListener('drop', this.handleDrop, false)
     this.quill.root.addEventListener('paste', this.handlePaste, false)
@@ -64,6 +65,11 @@ export class ImageDrop {
    */
   insert (dataUrl) {
     const index = (this.quill.getSelection() || {}).index || this.quill.getLength()
+    // console.log(dataUrl)
+    // var linkNode = document.querySelector('.ql-thumbs')
+    // console.log(linkNode)
+    // linkNode.append()
+    // this.quill.addContainer('ql-thumbnail')
     this.quill.insertEmbed(index, 'image', dataUrl, 'user')
   }
 
@@ -92,5 +98,4 @@ export class ImageDrop {
       }
     })
   }
-
 }
