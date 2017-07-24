@@ -33,9 +33,17 @@ module.exports = {
         }
       },
       {
+        test: /\.(html)$/,
+        loader: 'html-loader'
+      },
+      {
         test: /\.vue$/,
         loader: 'vue-loader',
         options: vueLoaderConfig
+      },
+      {
+        test: /\.theme$/,
+        loader: ['raw-loader', 'sass-loader']
       },
       {
         test: /\.js$/,

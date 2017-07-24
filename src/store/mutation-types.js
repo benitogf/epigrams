@@ -1,0 +1,6 @@
+export const LOGIN = 'LOGIN'
+export const LOGIN_ERROR = 'LOGIN_ERROR'
+export const REFRESH_TOKEN = 'REFRESH_TOKEN'
+export const LOGOUT = 'LOGOUT'
+export const SET_PROFILE = 'SET_PROFILE'
+export const SET_TAGS = 'SET_TAGS'

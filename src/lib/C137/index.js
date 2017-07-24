@@ -1,6 +1,6 @@
 // @flow
-import { Hub } from '@/lib/C137/hub'
+import { Delta } from '@/lib/C137/delta'
 
-const wh = new Hub()
+const wh = new Delta()
 
 export default wh

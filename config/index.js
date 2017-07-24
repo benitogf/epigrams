@@ -8,6 +8,13 @@ module.exports = {
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
+    proxyTable: {
+      '/api': {
+        target: 'http://localhost:9060',
+        pathRewrite: {'^/api' : ''},
+        secure: false
+      }
+    },
     routeCache: [
       {
         urlPattern: '/',
@@ -35,6 +42,13 @@ module.exports = {
     https: true,
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
+    proxyTable: {
+      "/api": {
+        target: "http://localhost:9060",
+        pathRewrite: {"^/api" : ""},
+        secure: false
+      }
+    },    
     // CSS Sourcemaps off by default because relative paths are "buggy"
     // with this option, according to the CSS-Loader README
     // (https://github.com/webpack/css-loader#sourcemaps)

@@ -68,14 +68,18 @@ const session = {
   handle (e) {
     let aux = this.que[e.data.id]
     delete this.que[e.data.id]
-    return aux(e.data.result)
+    if (aux) {
+      return aux(e.data.result)
+    } else {
+      throw new Error('tp')
+    }
   },
 
   execute (action, data, password) {
     if (!window.sessionWorker.onmessage) {
       window.sessionWorker.onmessage = this.handle.bind(this)
     }
-    let now = Date.now()
+    let now = Date.now() + action + Math.random(200)
     let task = new Promise((resolve, reject) => {
       setTimeout(reject, 20000)
       this.que[now] = resolve

@@ -5,7 +5,7 @@
 [build-url]: https://travis-ci.org/benitogf/epigrams
 [build-image]: https://img.shields.io/travis/benitogf/epigrams/master.svg?style=flat-square
 
-> A Vue.js project
+> A Vue.js project based on [vue-material](http://vuematerial.io) 
 
 ## Build Setup
 

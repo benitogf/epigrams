@@ -1,5 +1,5 @@
 <template>
-  <div class="vue-quill">
+  <div v-on:quill="reload" class="vue-quill">
     <h3 class="status" v-bind:class="{
       active: status !== ''
     }">{{ status }}</h3>
@@ -11,6 +11,7 @@
 </template>
 <script>
 // @flow
+import Vue from 'vue'
 import _ from 'lodash'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
@@ -63,85 +64,6 @@ function debounce (inner, ms = 0) {
   }
 }
 
-async function getDelta (label) {
-  try {
-    let id = await wh.session.hash(label)
-    let content = await wh.item.get(id) // read
-    let index = 0
-    var images = []
-    for (let dt of content.data.ops) {
-      let img = dt.insert.image
-      if (img && img.indexOf('data:image') === -1) {
-        let id = img
-        images.push(id)
-        let image
-        try {
-          image = await wh.item.get(id)
-        } catch (e) {
-          image = { data: '' }
-        }
-        content.data.ops[index].insert.image = image.data
-      }
-      index++
-    }
-    return { content, images }
-  } catch (e) {
-    return {}
-  }
-}
-
-async function saveDelta (label, data) {
-  let index = 0
-  let images = []
-  for (let dt of data.ops) {
-    let img = dt.insert.image
-    if (img && img.indexOf('data:image') === 0) {
-      let id = await wh.session.hash(label + 'img' + img)
-      try {
-        images.push(id)
-        await wh.item.create({ id, data: img })
-      } catch (e) {
-      }
-      data.ops[index].insert.image = id
-    }
-    index++
-  }
-  await wh.item.set({ label, data }) // write
-  return images
-}
-
-async function updateTrash (label, images) {
-  let store
-  try {
-    let id = await wh.session.hash(label + ':images')
-    store = await wh.item.get(id)
-  } catch (e) {
-    store = { data: images }
-  }
-  let trash = store.data.filter((nf) => images.indexOf(nf) === -1)
-  await wh.item.set({
-    label: label + ':images',
-    data: images.concat(trash)
-  })
-}
-
-async function clean (label, images) {
-  let id = await wh.session.hash(label + ':images')
-  let trash = []
-  try {
-    let store = await wh.item.get(id)
-    for (let img of store.data) {
-      if (images.indexOf(img) === -1) {
-        trash.push(img)
-      }
-    }
-    await wh.item.delSome(trash)
-    await wh.item.set({ id, data: images })
-  } catch (e) {
-    await wh.item.set({ id, data: trash })
-  }
-}
-
 export default {
   props: {
     formats: {
@@ -157,58 +79,71 @@ export default {
       default () {
         return {}
       }
+    },
+    id: {
+      type: String,
+      default: 'root'
     }
   },
   data () {
     return {
       editor: {},
-      status: '/',
+      status: '',
       defaultConfig: {
         modules: {
           imageDrop: true,
           toolbar: [
             [{ header: [1, 2, false] }],
             ['bold', 'italic', 'underline'],
-            ['image']
+            ['image', 'code']
           ]
         },
         theme: 'snow'
       }
     }
   },
+  watch: {
+    async id () {
+      Vue.nextTick(async () => {
+        await this.reload()
+      })
+    }
+  },
   async mounted () {
-    loaderStart(this)
-    await wh.hub.upsert('public', 'public') // init
     Quill.register('modules/imageDrop', ImageDrop)
     this.editor = new Quill(this.$refs.quill,
       _.defaultsDeep(this.config, this.defaultConfig))
-    let label = this.$el.id
-    let delta = await getDelta(label)
-    let content = delta.content
-    let images = delta.images
-    if (content) {
-      this.editor.setContents(content.data)
-    } else {
-      this.editor.setContents('')
-    }
-    clean(label, images)
-    loaderStop(this)
-    let update = debounce(async (delta, source) => {
-      loaderStart(this)
-      try {
-        let label = this.$el.id
-        let data = this.editor.getContents()
-        let images = await saveDelta(label, data)
-        updateTrash(label, images)
-      } catch (e) {
-        await saveDelta(label, { data: '' })
-      }
-      loaderStop(this)
-    }, freq * 15)
-    this.editor.on('text-change', update)
+    await this.reload()
   },
-
   methods: {
+    async reload () {
+      loaderStart(this)
+      await wh.hub.upsert('public', 'public') // init
+      let label = this.id
+      let delta = await wh.delta.get(label)
+      let content = delta.content
+      let images = delta.images
+      if (content) {
+        this.editor.setContents(content.data)
+      } else {
+        this.editor.setContents('')
+      }
+      await wh.delta.clean(label, images)
+      loaderStop(this)
+      let update = debounce(async (delta, source) => {
+        loaderStart(this)
+        try {
+          let label = this.id
+          let data = this.editor.getContents()
+          let images = await wh.delta.set(label, data)
+          wh.delta.update(label, images)
+        } catch (e) {
+          await wh.delta.set(label, { data: '' })
+        }
+        loaderStop(this)
+      }, freq * 15)
+      this.editor.on('text-change', update)
+    },
     focusEditor (e) {
       if (e && e.srcElement) {
         let classList = e.srcElement.classList
@@ -236,19 +171,6 @@ export default {
   padding: 50px;
   padding: 0;
   height: inherit;
-  .ql-toolbar.ql-snow {
-    position: fixed;
-    z-index: 4;
-    width: 100%;
-  }
-  .ql-container.ql-snow {
-    border: none;
-    padding-top: 41px;
-  }
-  .ql-toolbar.ql-snow {
-    border: none;
-    border-bottom: 2px solid black;
-  }
   .ql-editor {
     font-size: 18px;
     overflow-y: auto;
