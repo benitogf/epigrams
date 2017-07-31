@@ -57,6 +57,16 @@
           background-color: rgba(#999, .2);
         }
       }
+      .md-list-form-item {
+        .md-list-item-container {
+          background-color: #{'BACKGROUND-COLOR'};
+
+          &:hover,
+          &:focus {
+            background-color: #{'BACKGROUND-COLOR'};
+          }
+        }
+      }
     }
   }
 }

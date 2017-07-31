@@ -171,6 +171,8 @@ export default {
   padding: 50px;
   padding: 0;
   height: inherit;
+  padding: 10px 0px;
+  width: 100%;
   .ql-editor {
     font-size: 18px;
     overflow-y: auto;

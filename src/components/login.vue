@@ -10,14 +10,18 @@
 
       <md-card-content>
         <span v-if="error !== ''">{{error}}</span>
-        <form novalidate @submit.stop.prevent.native="login(user)">
+        <form novalidate
+          @submit.stop.prevent.native="login(user)">
           <md-input-container>
             <label>Username</label>
-            <md-input v-model="user.account" @keyup.native.13="login(user)"></md-input>
+            <md-input v-model="user.account"
+              @keyup.native.13="login(user)"></md-input>
           </md-input-container>
           <md-input-container>
             <label>Password</label>
-            <md-input v-model="user.password" type="password" @keyup.native.13="login(user)"></md-input>
+            <md-input v-model="user.password"
+              type="password"
+              @keyup.native.13="login(user)"></md-input>
           </md-input-container>
         </form>
       </md-card-content>

@@ -10,23 +10,30 @@
       v-model="prompt.value"
       ref="tag">
     </md-dialog-prompt>
-    <md-whiteframe v-if="user" md-tag="md-toolbar" md-elevation="1" class="main-header">
-      <md-button class="md-icon-button nav-trigger" @click="toggleSidenav">
+    <md-whiteframe v-if="user"
+      md-tag="md-toolbar"
+      md-elevation="1"
+      class="main-header">
+      <md-button class="md-icon-button nav-trigger"
+        @click="toggleSidenav">
         <md-icon md-src="menu">menu</md-icon>
       </md-button>
     </md-whiteframe>
-    <md-sidenav v-if="user" class="main-sidebar md-left md-fixed"
-      md-swipeable ref="main-sidebar">
+    <md-sidenav v-if="user"
+      class="main-sidebar md-left md-fixed"
+      md-swipeable
+      ref="main-sidebar">
       <md-toolbar class="logo">
         <router-link exact to="/">
           <md-icon md-src="corsarial"></md-icon>
         </router-link>
       </md-toolbar>
 
-      <div class="main-sidebar-links">
+      <div class="main-sidebar-links" v-if="tags">
         <md-list>
           <md-list-item>
-            <span></span><md-switch v-model="edit" id="my-test0" name="my-test0"></md-switch>
+            <span></span>
+            <md-switch v-model="edit"></md-switch>
           </md-list-item>
         </md-list>
         <md-list-tree :edit="edit"

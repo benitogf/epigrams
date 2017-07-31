@@ -5,6 +5,7 @@ import * as actions from './actions'
 import * as getters from './getters'
 import user from './modules/user'
 import tag from './modules/tag'
+import page from './modules/page'
 
 Vue.use(Vuex)
 
@@ -15,6 +16,7 @@ export default new Vuex.Store({
   getters,
   modules: {
     user,
-    tag
+    tag,
+    page
   }
 })

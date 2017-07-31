@@ -8,7 +8,13 @@ const indexedDB = {
   },
   get: async function (keys) {
     let db = await this.__operate()
-    let result = await db.items.where('id').equals(keys.join(':')).toArray()
+    let key
+    if (Array.isArray(keys)) {
+      key = keys.join(':')
+    } else {
+      key = keys
+    }
+    let result = await db.items.where('id').equals(key).toArray()
     if (result[0]) {
       return result[0].data
     } else {
@@ -28,7 +34,13 @@ const indexedDB = {
   },
   set: async function (keys, data) {
     let db = await this.__operate()
-    return await db.items.put({ id: keys.join(':'), data: data })
+    let key
+    if (Array.isArray(keys)) {
+      key = keys.join(':')
+    } else {
+      key = keys
+    }
+    return await db.items.put({ id: key, data })
   },
   setMany: async function (data) {
     let db = await this.__operate()
