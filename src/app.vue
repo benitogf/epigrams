@@ -1,6 +1,6 @@
 <template>
   <transition appear name="slide-fade">
-     <quill id="nepa" class="quill-container"></quill>
+     <quill id="wei" class="quill-container"></quill>
   </transition>
 </template>
 

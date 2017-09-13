@@ -1,11 +1,12 @@
 // @flow
 import jsonpack from 'jsonpack'
+const globKey = '6e6a5910ea9537a7d02e44975f4765726c4a0237c7132d3ea4cf33be76ce678b'
 
 const session = {
   que: {},
   async setKeyword (keyword, id) {
     let data = { keyword, id }
-    let pack = await session.pack(data, '6e6a5910ea9537a7d02e44975f4765726c4a0237c7132d3ea4cf33be76ce678b')
+    let pack = await session.pack(data, globKey)
     window.sessionStorage.setItem('hub', pack)
     return
   },
@@ -13,7 +14,7 @@ const session = {
   async getHub () {
     let pack = window.sessionStorage.getItem('hub')
     if (pack) {
-      let hub = await session.unpack(pack, '6e6a5910ea9537a7d02e44975f4765726c4a0237c7132d3ea4cf33be76ce678b')
+      let hub = await session.unpack(pack, globKey)
       return hub.id
     } else {
       return false
@@ -23,7 +24,7 @@ const session = {
   async get () {
     let pack = window.sessionStorage.getItem('hub')
     if (pack) {
-      let hub = await session.unpack(pack, '6e6a5910ea9537a7d02e44975f4765726c4a0237c7132d3ea4cf33be76ce678b')
+      let hub = await session.unpack(pack, globKey)
       return hub
     } else {
       return false
@@ -75,7 +76,7 @@ const session = {
     if (!window.sessionWorker.onmessage) {
       window.sessionWorker.onmessage = this.handle.bind(this)
     }
-    let now = Date.now()
+    let now = Date.now() + action + Math.random()
     let task = new Promise((resolve, reject) => {
       setTimeout(reject, 20000)
       this.que[now] = resolve

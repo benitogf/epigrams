@@ -98,11 +98,12 @@ async function saveDelta (label, data) {
     if (img && img.indexOf('data:image') === 0) {
       let id = await wh.session.hash(label + 'img' + img)
       try {
-        images.push(id)
         await wh.item.create({ id, data: img })
+        images.push(id)
+        data.ops[index].insert.image = id
       } catch (e) {
+        data.ops.slice(index, 1)
       }
-      data.ops[index].insert.image = id
     }
     index++
   }
@@ -112,13 +113,15 @@ async function saveDelta (label, data) {
 
 async function updateTrash (label, images) {
   let store
+  let trash
   try {
     let id = await wh.session.hash(label + ':images')
     store = await wh.item.get(id)
+    trash = store.data.filter((nf) => images.indexOf(nf) === -1)
   } catch (e) {
     store = { data: images }
+    trash = []
   }
-  let trash = store.data.filter((nf) => images.indexOf(nf) === -1)
   await wh.item.set({
     label: label + ':images',
     data: images.concat(trash)
@@ -127,8 +130,8 @@ async function updateTrash (label, images) {
 
 async function clean (label, images) {
   let id = await wh.session.hash(label + ':images')
-  let trash = []
   try {
+    let trash = []
     let store = await wh.item.get(id)
     for (let img of store.data) {
       if (images.indexOf(img) === -1) {
@@ -138,7 +141,7 @@ async function clean (label, images) {
     await wh.item.delSome(trash)
     await wh.item.set({ id, data: images })
   } catch (e) {
-    await wh.item.set({ id, data: trash })
+    await wh.item.set({ id, data: [] })
   }
 }
 
@@ -191,18 +194,14 @@ export default {
     } else {
       this.editor.setContents('')
     }
-    clean(label, images)
+    await clean(label, images)
     loaderStop(this)
     let update = debounce(async (delta, source) => {
       loaderStart(this)
-      try {
-        let label = this.$el.id
-        let data = this.editor.getContents()
-        let images = await saveDelta(label, data)
-        updateTrash(label, images)
-      } catch (e) {
-        await saveDelta(label, { data: '' })
-      }
+      let label = this.$el.id
+      let data = this.editor.getContents()
+      let images = await saveDelta(label, data)
+      updateTrash(label, images)
       loaderStop(this)
     }, freq * 15)
     this.editor.on('text-change', update)

@@ -48,7 +48,8 @@ export class ImageDrop {
     if (evt.clipboardData && evt.clipboardData.items && evt.clipboardData.items.length) {
       this.readFiles(evt.clipboardData.items, dataUrl => {
         const selection = this.quill.getSelection()
-        if (!selection) {
+        // https://github.com/quilljs/quill/issues/1082
+        if (!selection || selection.length === 0) {
           // we must be in a browser that supports pasting (like Firefox)
           // so it has already been placed into the editor
           // otherwise we wait until after the paste when this.quill.getSelection()
@@ -65,11 +66,6 @@ export class ImageDrop {
    */
   insert (dataUrl) {
     const index = (this.quill.getSelection() || {}).index || this.quill.getLength()
-    // console.log(dataUrl)
-    // var linkNode = document.querySelector('.ql-thumbs')
-    // console.log(linkNode)
-    // linkNode.append()
-    // this.quill.addContainer('ql-thumbnail')
     this.quill.insertEmbed(index, 'image', dataUrl, 'user')
   }
 
