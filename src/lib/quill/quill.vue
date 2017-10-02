@@ -170,7 +170,7 @@ export default {
         modules: {
           imageDrop: true,
           toolbar: [
-            [{ header: [1, 2, false] }],
+            [{ list: 'ordered' }, { list: 'bullet' }, { align: [false, 'center', 'right', 'justify'] }],
             ['bold', 'italic', 'underline'],
             ['image']
           ]
@@ -229,41 +229,68 @@ export default {
 </script>
 
 <style lang="scss">
+@media print {
+  p {
+    orphans: 4;
+  }
+  .ql-toolbar, .ql-toolbar * {
+    display: none !important;
+  }
+  .ql-container, .ql-editor {
+    height: auto;
+    overflow: hidden;
+    page-break-inside: auto;
+    page-break-after: always;
+    white-space: pre-wrap;
+  }
+}
 .vue-quill {
   height: auto;
   min-height: 100%;
   padding: 50px;
   padding: 0;
   height: inherit;
-  .ql-toolbar.ql-snow {
+  .ql-toolbar {
     position: fixed;
     z-index: 4;
     width: 100%;
   }
-  .ql-container.ql-snow {
+  .ql-container {
     border: none;
     padding-top: 41px;
   }
-  .ql-toolbar.ql-snow {
+  .ql-toolbar {
     border: none;
-    border-bottom: 2px solid black;
+    box-shadow: 0px 1.6px 1.6px rgba(221, 221, 221, 0.71);
   }
   .ql-editor {
     font-size: 18px;
-    overflow-y: auto;
+    overflow-y: scroll;
     padding: 12px 15px 70px 15px !important;
+    &::-webkit-scrollbar-track {
+      background-color: #FFFFFF;
+    }
+
+    &::-webkit-scrollbar {
+      width: 10px;
+      background-color: #FFFFFF;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #EFEFEF;
+    }
   }
 }
 .status {
   &.active {
-    background-color: black;
-    color: white;
+    background-color: white;
+    color: black;
   }
   padding-top: 5px;
   position: fixed;
   top: 0;
   width: 60px;
-  height: 37px;
+  height: 35px;
   color: white;
   background-color: transparent;
   margin: 0;
