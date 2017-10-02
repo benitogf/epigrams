@@ -3,8 +3,7 @@
     <h3 class="status" v-bind:class="{
       active: status !== ''
     }">{{ status }}</h3>
-    <div class="ui attached segment"
-      ref="quill"
+    <div ref="quill"
       @click.prevent="focusEditor">
     </div>
   </div>
@@ -254,10 +253,12 @@ export default {
     position: fixed;
     z-index: 4;
     width: 100%;
+    border: none !important;
   }
   .ql-container {
     border: none;
     padding-top: 41px;
+    border: none !important;
   }
   .ql-toolbar {
     border: none;
