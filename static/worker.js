@@ -68,6 +68,74 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* eslint-disable node/no-deprecated-api */
+var buffer = __webpack_require__(2)
+var Buffer = buffer.Buffer
+
+// alternative to using Object.keys for old browsers
+function copyProps (src, dst) {
+  for (var key in src) {
+    dst[key] = src[key]
+  }
+}
+if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
+  module.exports = buffer
+} else {
+  // Copy properties from require('buffer')
+  copyProps(buffer, exports)
+  exports.Buffer = SafeBuffer
+}
+
+function SafeBuffer (arg, encodingOrOffset, length) {
+  return Buffer(arg, encodingOrOffset, length)
+}
+
+// Copy static methods from Buffer
+copyProps(Buffer, SafeBuffer)
+
+SafeBuffer.from = function (arg, encodingOrOffset, length) {
+  if (typeof arg === 'number') {
+    throw new TypeError('Argument must not be a number')
+  }
+  return Buffer(arg, encodingOrOffset, length)
+}
+
+SafeBuffer.alloc = function (size, fill, encoding) {
+  if (typeof size !== 'number') {
+    throw new TypeError('Argument must be a number')
+  }
+  var buf = Buffer(size)
+  if (fill !== undefined) {
+    if (typeof encoding === 'string') {
+      buf.fill(fill, encoding)
+    } else {
+      buf.fill(fill)
+    }
+  } else {
+    buf.fill(0)
+  }
+  return buf
+}
+
+SafeBuffer.allocUnsafe = function (size) {
+  if (typeof size !== 'number') {
+    throw new TypeError('Argument must be a number')
+  }
+  return Buffer(size)
+}
+
+SafeBuffer.allocUnsafeSlow = function (size) {
+  if (typeof size !== 'number') {
+    throw new TypeError('Argument must be a number')
+  }
+  return buffer.SlowBuffer(size)
+}
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -96,7 +164,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1893,74 +1961,6 @@ function isnan (val) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* eslint-disable node/no-deprecated-api */
-var buffer = __webpack_require__(1)
-var Buffer = buffer.Buffer
-
-// alternative to using Object.keys for old browsers
-function copyProps (src, dst) {
-  for (var key in src) {
-    dst[key] = src[key]
-  }
-}
-if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
-  module.exports = buffer
-} else {
-  // Copy properties from require('buffer')
-  copyProps(buffer, exports)
-  exports.Buffer = SafeBuffer
-}
-
-function SafeBuffer (arg, encodingOrOffset, length) {
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-// Copy static methods from Buffer
-copyProps(Buffer, SafeBuffer)
-
-SafeBuffer.from = function (arg, encodingOrOffset, length) {
-  if (typeof arg === 'number') {
-    throw new TypeError('Argument must not be a number')
-  }
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.alloc = function (size, fill, encoding) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  var buf = Buffer(size)
-  if (fill !== undefined) {
-    if (typeof encoding === 'string') {
-      buf.fill(fill, encoding)
-    } else {
-      buf.fill(fill)
-    }
-  } else {
-    buf.fill(0)
-  }
-  return buf
-}
-
-SafeBuffer.allocUnsafe = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return Buffer(size)
-}
-
-SafeBuffer.allocUnsafeSlow = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return buffer.SlowBuffer(size)
-}
-
-
-/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2011,7 +2011,7 @@ module.exports = Duplex;
 
 /*<replacement>*/
 var util = __webpack_require__(7);
-util.inherits = __webpack_require__(0);
+util.inherits = __webpack_require__(1);
 /*</replacement>*/
 
 var Readable = __webpack_require__(23);
@@ -2121,66 +2121,78 @@ module.exports = g;
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
+var Buffer = __webpack_require__(0).Buffer
+
+// prototype class for hash functions
 function Hash (blockSize, finalSize) {
-  this._block = new Buffer(blockSize)
+  this._block = Buffer.alloc(blockSize)
   this._finalSize = finalSize
   this._blockSize = blockSize
   this._len = 0
-  this._s = 0
 }
 
 Hash.prototype.update = function (data, enc) {
   if (typeof data === 'string') {
     enc = enc || 'utf8'
-    data = new Buffer(data, enc)
+    data = Buffer.from(data, enc)
   }
 
-  var l = this._len += data.length
-  var s = this._s || 0
-  var f = 0
-  var buffer = this._block
+  var block = this._block
+  var blockSize = this._blockSize
+  var length = data.length
+  var accum = this._len
 
-  while (s < l) {
-    var t = Math.min(data.length, f + this._blockSize - (s % this._blockSize))
-    var ch = (t - f)
+  for (var offset = 0; offset < length;) {
+    var assigned = accum % blockSize
+    var remainder = Math.min(length - offset, blockSize - assigned)
 
-    for (var i = 0; i < ch; i++) {
-      buffer[(s % this._blockSize) + i] = data[i + f]
+    for (var i = 0; i < remainder; i++) {
+      block[assigned + i] = data[offset + i]
     }
 
-    s += ch
-    f += ch
+    accum += remainder
+    offset += remainder
 
-    if ((s % this._blockSize) === 0) {
-      this._update(buffer)
+    if ((accum % blockSize) === 0) {
+      this._update(block)
     }
   }
-  this._s = s
 
+  this._len += length
   return this
 }
 
 Hash.prototype.digest = function (enc) {
-  // Suppose the length of the message M, in bits, is l
-  var l = this._len * 8
+  var rem = this._len % this._blockSize
 
-  // Append the bit 1 to the end of the message
-  this._block[this._len % this._blockSize] = 0x80
+  this._block[rem] = 0x80
 
-  // and then k zero bits, where k is the smallest non-negative solution to the equation (l + 1 + k) === finalSize mod blockSize
-  this._block.fill(0, this._len % this._blockSize + 1)
+  // zero (rem + 1) trailing bits, where (rem + 1) is the smallest
+  // non-negative solution to the equation (length + 1 + (rem + 1)) === finalSize mod blockSize
+  this._block.fill(0, rem + 1)
 
-  if (l % (this._blockSize * 8) >= this._finalSize * 8) {
+  if (rem >= this._finalSize) {
     this._update(this._block)
     this._block.fill(0)
   }
 
-  // to this append the block which is equal to the number l written in binary
-  // TODO: handle case where l is > Math.pow(2, 29)
-  this._block.writeInt32BE(l, this._blockSize - 4)
+  var bits = this._len * 8
 
-  var hash = this._update(this._block) || this._hash()
+  // uint32
+  if (bits <= 0xffffffff) {
+    this._block.writeUInt32BE(bits, this._blockSize - 4)
+
+  // uint64
+  } else {
+    var lowBits = bits & 0xffffffff
+    var highBits = (bits - lowBits) / 0x100000000
+
+    this._block.writeUInt32BE(highBits, this._blockSize - 8)
+    this._block.writeUInt32BE(lowBits, this._blockSize - 4)
+  }
+
+  this._update(this._block)
+  var hash = this._hash()
 
   return enc ? hash.toString(enc) : hash
 }
@@ -2191,7 +2203,6 @@ Hash.prototype._update = function () {
 
 module.exports = Hash
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 6 */
@@ -2208,7 +2219,7 @@ module.exports = Hash
   return buffer
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2).Buffer))
 
 /***/ }),
 /* 7 */
@@ -2322,7 +2333,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2).Buffer))
 
 /***/ }),
 /* 8 */
@@ -2333,7 +2344,7 @@ function objectToString(o) {
 // which is in turn based on the one from crypto-js
 // https://code.google.com/p/crypto-js/
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 
 function asUInt32Array (buf) {
   if (!Buffer.isBuffer(buf)) buf = Buffer.from(buf)
@@ -2562,10 +2573,10 @@ module.exports.AES = AES
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var Transform = __webpack_require__(29).Transform
 var StringDecoder = __webpack_require__(13).StringDecoder
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 
 function CipherBase (hashMode) {
   Transform.call(this)
@@ -3237,7 +3248,7 @@ function isUndefined(arg) {
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var Buffer = __webpack_require__(1).Buffer;
+var Buffer = __webpack_require__(2).Buffer;
 
 var isBufferEncoding = Buffer.isEncoding
   || function(encoding) {
@@ -3511,7 +3522,7 @@ Writable.WritableState = WritableState;
 
 /*<replacement>*/
 var util = __webpack_require__(7);
-util.inherits = __webpack_require__(0);
+util.inherits = __webpack_require__(1);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -3525,7 +3536,7 @@ var Stream = __webpack_require__(26);
 /*</replacement>*/
 
 /*<replacement>*/
-var Buffer = __webpack_require__(2).Buffer;
+var Buffer = __webpack_require__(0).Buffer;
 var OurUint8Array = global.Uint8Array || function () {};
 function _uint8ArrayToBuffer(chunk) {
   return Buffer.from(chunk);
@@ -4128,9 +4139,9 @@ exports.PassThrough = __webpack_require__(48);
 /***/ (function(module, exports, __webpack_require__) {
 
 var aes = __webpack_require__(8)
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var Transform = __webpack_require__(9)
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var GHASH = __webpack_require__(37)
 var xor = __webpack_require__(6)
 
@@ -4269,7 +4280,7 @@ exports.encrypt = function (self, chunk) {
   return xor(chunk, pad)
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2).Buffer))
 
 /***/ }),
 /* 18 */
@@ -4299,206 +4310,16 @@ module.exports = modes
 /* 19 */
 /***/ (function(module, exports) {
 
-module.exports = {
-	"aes-128-ecb": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 0,
-		"mode": "ECB",
-		"type": "block"
-	},
-	"aes-192-ecb": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 0,
-		"mode": "ECB",
-		"type": "block"
-	},
-	"aes-256-ecb": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 0,
-		"mode": "ECB",
-		"type": "block"
-	},
-	"aes-128-cbc": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "CBC",
-		"type": "block"
-	},
-	"aes-192-cbc": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "CBC",
-		"type": "block"
-	},
-	"aes-256-cbc": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "CBC",
-		"type": "block"
-	},
-	"aes128": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "CBC",
-		"type": "block"
-	},
-	"aes192": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "CBC",
-		"type": "block"
-	},
-	"aes256": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "CBC",
-		"type": "block"
-	},
-	"aes-128-cfb": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "CFB",
-		"type": "stream"
-	},
-	"aes-192-cfb": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "CFB",
-		"type": "stream"
-	},
-	"aes-256-cfb": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "CFB",
-		"type": "stream"
-	},
-	"aes-128-cfb8": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "CFB8",
-		"type": "stream"
-	},
-	"aes-192-cfb8": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "CFB8",
-		"type": "stream"
-	},
-	"aes-256-cfb8": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "CFB8",
-		"type": "stream"
-	},
-	"aes-128-cfb1": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "CFB1",
-		"type": "stream"
-	},
-	"aes-192-cfb1": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "CFB1",
-		"type": "stream"
-	},
-	"aes-256-cfb1": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "CFB1",
-		"type": "stream"
-	},
-	"aes-128-ofb": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "OFB",
-		"type": "stream"
-	},
-	"aes-192-ofb": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "OFB",
-		"type": "stream"
-	},
-	"aes-256-ofb": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "OFB",
-		"type": "stream"
-	},
-	"aes-128-ctr": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 16,
-		"mode": "CTR",
-		"type": "stream"
-	},
-	"aes-192-ctr": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 16,
-		"mode": "CTR",
-		"type": "stream"
-	},
-	"aes-256-ctr": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 16,
-		"mode": "CTR",
-		"type": "stream"
-	},
-	"aes-128-gcm": {
-		"cipher": "AES",
-		"key": 128,
-		"iv": 12,
-		"mode": "GCM",
-		"type": "auth"
-	},
-	"aes-192-gcm": {
-		"cipher": "AES",
-		"key": 192,
-		"iv": 12,
-		"mode": "GCM",
-		"type": "auth"
-	},
-	"aes-256-gcm": {
-		"cipher": "AES",
-		"key": 256,
-		"iv": 12,
-		"mode": "GCM",
-		"type": "auth"
-	}
-};
+module.exports = {"aes-128-ecb":{"cipher":"AES","key":128,"iv":0,"mode":"ECB","type":"block"},"aes-192-ecb":{"cipher":"AES","key":192,"iv":0,"mode":"ECB","type":"block"},"aes-256-ecb":{"cipher":"AES","key":256,"iv":0,"mode":"ECB","type":"block"},"aes-128-cbc":{"cipher":"AES","key":128,"iv":16,"mode":"CBC","type":"block"},"aes-192-cbc":{"cipher":"AES","key":192,"iv":16,"mode":"CBC","type":"block"},"aes-256-cbc":{"cipher":"AES","key":256,"iv":16,"mode":"CBC","type":"block"},"aes128":{"cipher":"AES","key":128,"iv":16,"mode":"CBC","type":"block"},"aes192":{"cipher":"AES","key":192,"iv":16,"mode":"CBC","type":"block"},"aes256":{"cipher":"AES","key":256,"iv":16,"mode":"CBC","type":"block"},"aes-128-cfb":{"cipher":"AES","key":128,"iv":16,"mode":"CFB","type":"stream"},"aes-192-cfb":{"cipher":"AES","key":192,"iv":16,"mode":"CFB","type":"stream"},"aes-256-cfb":{"cipher":"AES","key":256,"iv":16,"mode":"CFB","type":"stream"},"aes-128-cfb8":{"cipher":"AES","key":128,"iv":16,"mode":"CFB8","type":"stream"},"aes-192-cfb8":{"cipher":"AES","key":192,"iv":16,"mode":"CFB8","type":"stream"},"aes-256-cfb8":{"cipher":"AES","key":256,"iv":16,"mode":"CFB8","type":"stream"},"aes-128-cfb1":{"cipher":"AES","key":128,"iv":16,"mode":"CFB1","type":"stream"},"aes-192-cfb1":{"cipher":"AES","key":192,"iv":16,"mode":"CFB1","type":"stream"},"aes-256-cfb1":{"cipher":"AES","key":256,"iv":16,"mode":"CFB1","type":"stream"},"aes-128-ofb":{"cipher":"AES","key":128,"iv":16,"mode":"OFB","type":"stream"},"aes-192-ofb":{"cipher":"AES","key":192,"iv":16,"mode":"OFB","type":"stream"},"aes-256-ofb":{"cipher":"AES","key":256,"iv":16,"mode":"OFB","type":"stream"},"aes-128-ctr":{"cipher":"AES","key":128,"iv":16,"mode":"CTR","type":"stream"},"aes-192-ctr":{"cipher":"AES","key":192,"iv":16,"mode":"CTR","type":"stream"},"aes-256-ctr":{"cipher":"AES","key":256,"iv":16,"mode":"CTR","type":"stream"},"aes-128-gcm":{"cipher":"AES","key":128,"iv":12,"mode":"GCM","type":"auth"},"aes-192-gcm":{"cipher":"AES","key":192,"iv":12,"mode":"GCM","type":"auth"},"aes-256-gcm":{"cipher":"AES","key":256,"iv":12,"mode":"GCM","type":"auth"}}
 
 /***/ }),
 /* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var aes = __webpack_require__(8)
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var Transform = __webpack_require__(9)
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 
 function StreamCipher (mode, key, iv, decrypt) {
   Transform.call(this)
@@ -4528,7 +4349,7 @@ module.exports = StreamCipher
 /* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var MD5 = __webpack_require__(45)
 
 /* eslint-disable camelcase */
@@ -4646,7 +4467,7 @@ var Stream = __webpack_require__(26);
 // TODO(bmeurer): Change this back to const once hole checks are
 // properly optimized away early in Ignition+TurboFan.
 /*<replacement>*/
-var Buffer = __webpack_require__(2).Buffer;
+var Buffer = __webpack_require__(0).Buffer;
 var OurUint8Array = global.Uint8Array || function () {};
 function _uint8ArrayToBuffer(chunk) {
   return Buffer.from(chunk);
@@ -4658,7 +4479,7 @@ function _isUint8Array(obj) {
 
 /*<replacement>*/
 var util = __webpack_require__(7);
-util.inherits = __webpack_require__(0);
+util.inherits = __webpack_require__(1);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -5676,7 +5497,7 @@ var Duplex = __webpack_require__(3);
 
 /*<replacement>*/
 var util = __webpack_require__(7);
-util.inherits = __webpack_require__(0);
+util.inherits = __webpack_require__(1);
 /*</replacement>*/
 
 util.inherits(Transform, Duplex);
@@ -5909,7 +5730,7 @@ module.exports = __webpack_require__(12).EventEmitter;
 /* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+/**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
  * in FIPS 180-2
  * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
@@ -5917,8 +5738,9 @@ module.exports = __webpack_require__(12).EventEmitter;
  *
  */
 
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var Hash = __webpack_require__(5)
+var Buffer = __webpack_require__(0).Buffer
 
 var K = [
   0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -6028,7 +5850,7 @@ Sha256.prototype._update = function (M) {
 }
 
 Sha256.prototype._hash = function () {
-  var H = new Buffer(32)
+  var H = Buffer.allocUnsafe(32)
 
   H.writeInt32BE(this._a, 0)
   H.writeInt32BE(this._b, 4)
@@ -6044,14 +5866,14 @@ Sha256.prototype._hash = function () {
 
 module.exports = Sha256
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var Hash = __webpack_require__(5)
+var Buffer = __webpack_require__(0).Buffer
 
 var K = [
   0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -6289,7 +6111,7 @@ Sha512.prototype._update = function (M) {
 }
 
 Sha512.prototype._hash = function () {
-  var H = new Buffer(64)
+  var H = Buffer.allocUnsafe(64)
 
   function writeInt64BE (h, l, offset) {
     H.writeInt32BE(h, offset)
@@ -6310,7 +6132,6 @@ Sha512.prototype._hash = function () {
 
 module.exports = Sha512
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 29 */
@@ -6340,7 +6161,7 @@ module.exports = Sha512
 module.exports = Stream;
 
 var EE = __webpack_require__(12).EventEmitter;
-var inherits = __webpack_require__(0);
+var inherits = __webpack_require__(1);
 
 inherits(Stream, EE);
 Stream.Readable = __webpack_require__(15);
@@ -7301,13 +7122,13 @@ function fromByteArray (uint8) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var AuthCipher = __webpack_require__(16)
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var MODES = __webpack_require__(18)
 var StreamCipher = __webpack_require__(20)
 var Transform = __webpack_require__(9)
 var aes = __webpack_require__(8)
 var ebtk = __webpack_require__(21)
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 
 function Decipher (mode, key, iv) {
   Transform.call(this)
@@ -7429,12 +7250,12 @@ exports.createDecipheriv = createDecipheriv
 
 var MODES = __webpack_require__(18)
 var AuthCipher = __webpack_require__(16)
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var StreamCipher = __webpack_require__(20)
 var Transform = __webpack_require__(9)
 var aes = __webpack_require__(8)
 var ebtk = __webpack_require__(21)
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 
 function Cipher (mode, key, iv) {
   Transform.call(this)
@@ -7547,7 +7368,7 @@ exports.createCipher = createCipher
 /* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var ZEROES = Buffer.alloc(16, 0)
 
 function toArray (buf) {
@@ -7665,7 +7486,7 @@ exports.decrypt = function (self, block) {
 /* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var xor = __webpack_require__(6)
 
 function encryptStart (self, data, decrypt) {
@@ -7704,7 +7525,7 @@ exports.encrypt = function (self, data, decrypt) {
 /* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 
 function encryptByte (self, byteParam, decrypt) {
   var pad
@@ -7776,7 +7597,7 @@ exports.encrypt = function (self, chunk, decrypt) {
   return out
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2).Buffer))
 
 /***/ }),
 /* 42 */
@@ -7812,7 +7633,7 @@ exports.encrypt = function (self, chunk) {
   return xor(chunk, pad)
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2).Buffer))
 
 /***/ }),
 /* 44 */
@@ -7910,7 +7731,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var HashBase = __webpack_require__(46)
 
 var ARRAY16 = new Array(16)
@@ -8055,7 +7876,7 @@ function fnI (a, b, c, d, m, k, s) {
 
 module.exports = MD5
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2).Buffer))
 
 /***/ }),
 /* 46 */
@@ -8063,9 +7884,9 @@ module.exports = MD5
 
 "use strict";
 
-var Buffer = __webpack_require__(2).Buffer
+var Buffer = __webpack_require__(0).Buffer
 var Transform = __webpack_require__(29).Transform
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 
 function throwIfNotStringOrBuffer (val, prefix) {
   if (!Buffer.isBuffer(val) && typeof val !== 'string') {
@@ -8204,7 +8025,7 @@ var Transform = __webpack_require__(24);
 
 /*<replacement>*/
 var util = __webpack_require__(7);
-util.inherits = __webpack_require__(0);
+util.inherits = __webpack_require__(1);
 /*</replacement>*/
 
 util.inherits(PassThrough, Transform);
@@ -8230,7 +8051,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Buffer = __webpack_require__(2).Buffer;
+var Buffer = __webpack_require__(0).Buffer;
 /*</replacement>*/
 
 function copyBuffer(src, target, offset) {
@@ -8517,7 +8338,7 @@ module.exports = __webpack_require__(14);
 /* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {/*
+/*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
  * in FIPS PUB 180-1
  * This source code is derived from sha1.js of the same repository.
@@ -8525,8 +8346,9 @@ module.exports = __webpack_require__(14);
  * operation was added.
  */
 
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var Hash = __webpack_require__(5)
+var Buffer = __webpack_require__(0).Buffer
 
 var K = [
   0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -8598,7 +8420,7 @@ Sha.prototype._update = function (M) {
 }
 
 Sha.prototype._hash = function () {
-  var H = new Buffer(20)
+  var H = Buffer.allocUnsafe(20)
 
   H.writeInt32BE(this._a | 0, 0)
   H.writeInt32BE(this._b | 0, 4)
@@ -8611,13 +8433,12 @@ Sha.prototype._hash = function () {
 
 module.exports = Sha
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {/*
+/*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS PUB 180-1
  * Version 2.1a Copyright Paul Johnston 2000 - 2002.
@@ -8626,8 +8447,9 @@ module.exports = Sha
  * See http://pajhome.org.uk/crypt/md5 for details.
  */
 
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var Hash = __webpack_require__(5)
+var Buffer = __webpack_require__(0).Buffer
 
 var K = [
   0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -8703,7 +8525,7 @@ Sha1.prototype._update = function (M) {
 }
 
 Sha1.prototype._hash = function () {
-  var H = new Buffer(20)
+  var H = Buffer.allocUnsafe(20)
 
   H.writeInt32BE(this._a | 0, 0)
   H.writeInt32BE(this._b | 0, 4)
@@ -8716,13 +8538,12 @@ Sha1.prototype._hash = function () {
 
 module.exports = Sha1
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+/**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
  * in FIPS 180-2
  * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
@@ -8730,9 +8551,10 @@ module.exports = Sha1
  *
  */
 
-var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var Sha256 = __webpack_require__(27)
 var Hash = __webpack_require__(5)
+var Buffer = __webpack_require__(0).Buffer
 
 var W = new Array(64)
 
@@ -8760,7 +8582,7 @@ Sha224.prototype.init = function () {
 }
 
 Sha224.prototype._hash = function () {
-  var H = new Buffer(28)
+  var H = Buffer.allocUnsafe(28)
 
   H.writeInt32BE(this._a, 0)
   H.writeInt32BE(this._b, 4)
@@ -8775,15 +8597,15 @@ Sha224.prototype._hash = function () {
 
 module.exports = Sha224
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(0)
+var inherits = __webpack_require__(1)
 var SHA512 = __webpack_require__(28)
 var Hash = __webpack_require__(5)
+var Buffer = __webpack_require__(0).Buffer
 
 var W = new Array(160)
 
@@ -8819,7 +8641,7 @@ Sha384.prototype.init = function () {
 }
 
 Sha384.prototype._hash = function () {
-  var H = new Buffer(48)
+  var H = Buffer.allocUnsafe(48)
 
   function writeInt64BE (h, l, offset) {
     H.writeInt32BE(h, offset)
@@ -8838,7 +8660,6 @@ Sha384.prototype._hash = function () {
 
 module.exports = Sha384
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1).Buffer))
 
 /***/ }),
 /* 58 */
