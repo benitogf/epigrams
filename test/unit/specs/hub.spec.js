@@ -25,6 +25,7 @@ describe('Warehouse service', function () {
   var newTestId = '3941b238daab168b5b742ef81603cd2c71fb83aa75b0a8044cc414561d7bf81a'
 
   it('should create a hub', async function () {
+    this.timeout = 10000;
     try {
       await wh.hub.select(testHubKey, testKeyword)
       await wh.hub.delete(testHubKey)
