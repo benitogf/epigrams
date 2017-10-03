@@ -56,6 +56,7 @@ describe('Warehouse service', function () {
   })
   // Items
   it('should create an item', async function () {
+    this.timeout(12000)
     await wh.hub.select(testHubKey, testKeyword)
     let hub = await wh.session.getHub()
     await wh.item.delSome([testId, newTestId])
