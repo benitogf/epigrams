@@ -236,11 +236,11 @@ export default {
     display: none !important;
   }
   .ql-container, .ql-editor {
-    height: auto;
-    overflow: hidden;
-    page-break-inside: auto;
-    page-break-after: always;
-    white-space: pre-wrap;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    zoom: 0.99;
   }
 }
 .vue-quill {
@@ -267,7 +267,7 @@ export default {
   .ql-editor {
     font-size: 18px;
     overflow-y: scroll;
-    padding: 12px 15px 70px 15px !important;
+    padding: 12px 15px 70px 15px;
     &::-webkit-scrollbar-track {
       background-color: #FFFFFF;
     }
