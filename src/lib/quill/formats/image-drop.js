@@ -16,7 +16,6 @@ export class ImageDrop {
     // bind handlers to this instance
     this.handleDrop = this.handleDrop.bind(this)
     this.handlePaste = this.handlePaste.bind(this)
-    this.quill.addContainer('ql-thumbs')
     // listen for drop and paste events
     this.quill.root.addEventListener('drop', this.handleDrop, false)
     this.quill.root.addEventListener('paste', this.handlePaste, false)
@@ -45,10 +44,13 @@ export class ImageDrop {
    * @param {Event} evt
    */
   handlePaste (evt) {
-    if (evt.clipboardData && evt.clipboardData.items && evt.clipboardData.items.length) {
+    if (evt.clipboardData && evt.clipboardData.items && evt.clipboardData.items.length && this.findFiles(evt.clipboardData.items)) {
+      evt.preventDefault()
       this.readFiles(evt.clipboardData.items, dataUrl => {
         const selection = this.quill.getSelection()
         // https://github.com/quilljs/quill/issues/1082
+        // console.log(dataUrl)
+
         if (!selection || selection.length === 0) {
           // we must be in a browser that supports pasting (like Firefox)
           // so it has already been placed into the editor
@@ -65,8 +67,25 @@ export class ImageDrop {
    * @param {String} dataUrl  The base64-encoded image URI
    */
   insert (dataUrl) {
-    const index = (this.quill.getSelection() || {}).index || this.quill.getLength()
-    this.quill.insertEmbed(index, 'image', dataUrl, 'user')
+    const index = this.quill.getSelection(true).index
+    this.quill.insertEmbed(index, 'image', dataUrl)
+  }
+
+  /**
+   * Find image URIs a list of files from evt.dataTransfer or evt.clipboardData
+   * @param {item[]} items  One or more transfer items
+   * @param {Function} result  boolean with true value when a file is on the item list
+   */
+  findFiles (items, result = false) {
+    [].forEach.call(items, file => {
+      if (file.type.match(/^image\/(gif|jpe?g|a?png|svg|webp|bmp|vnd\.microsoft\.icon)/i)) {
+        // file is not an image
+        // Note that some file formats such as psd start with image/* but are not readable
+        result = true
+      }
+    })
+
+    return result
   }
 
   /**

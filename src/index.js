@@ -3,7 +3,6 @@ import './lib/rsw'
 import Vue from 'vue'
 import App from './app'
 import VueQuill from '@/lib/quill'
-import 'quill/dist/quill.snow.css'
 
 Vue.use(VueQuill)
 

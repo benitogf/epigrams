@@ -18,6 +18,10 @@ import wh from '@/lib/C137'
 import spinners from 'cli-spinners'
 const freq = 80
 
+Quill.register({
+  'modules/imageDrop': ImageDrop
+})
+
 function loaderStart (self) {
   let loadSeq = spinners.dots12.frames
   let frame = 0
@@ -168,11 +172,24 @@ export default {
       defaultConfig: {
         modules: {
           imageDrop: true,
-          toolbar: [
-            [{ list: 'ordered' }, { list: 'bullet' }, { align: [false, 'center', 'right', 'justify'] }],
-            ['bold', 'italic', 'underline'],
-            ['image']
-          ]
+          toolbar: {
+            container: [
+              [{ list: 'ordered' }, { list: 'bullet' }, { align: [false, 'center', 'right', 'justify'] }],
+              ['bold', 'italic', 'underline'],
+              ['image', 'print']
+            ],
+            init () {
+              this.toolbarPrint = document.querySelectorAll('.ql-toolbar .ql-print')[0]
+              if (this.toolbarPrint && this.toolbarPrint.innerHTML === '') {
+                this.toolbarPrint.innerHTML = '<svg version="1.1" x="0px" y="0px" width="24px"height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve"><g><g><g><path d="M19,8H5c-1.7,0-3,1.3-3,3v6h4v4h12v-4h4v-6C22,9.3,20.7,8,19,8z M16,19H8v-5h8V19z M19,12c-0.6,0-1-0.4-1-1s0.4-1,1-1c0.6,0,1,0.4,1,1S19.6,12,19,12z M18,3H6v4h12V3z" class="ql-fill"/></g><rect fill="none" width="24" height="24"/></g></g></svg>'
+              }
+            },
+            handlers: {
+              print () {
+                window.print()
+              }
+            }
+          }
         },
         theme: 'snow'
       }
@@ -181,9 +198,9 @@ export default {
   async mounted () {
     loaderStart(this)
     await wh.hub.upsert('public', 'public') // init
-    Quill.register('modules/imageDrop', ImageDrop)
     this.editor = new Quill(this.$refs.quill,
       _.defaultsDeep(this.config, this.defaultConfig))
+    this.defaultConfig.modules.toolbar.init()
     let label = this.$el.id
     let delta = await getDelta(label)
     let content = delta.content
@@ -231,6 +248,9 @@ export default {
 @media print {
   p {
     orphans: 4;
+  }
+  ol, ul {
+    break-inside: avoid;
   }
   .ql-toolbar, .ql-toolbar * {
     display: none !important;
