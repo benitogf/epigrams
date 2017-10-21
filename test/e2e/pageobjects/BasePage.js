@@ -59,7 +59,7 @@ export default class BasePage {
     try {
       const element = await this.driver.findElement(locator)
       const text = await element.getText()
-      return text
+      return text.trim()
     } catch (err) {
       if (retries === 0) {
         throw new Error(`Unable to get ${locator.toString()} text after maximum retries, error : ${err.message}`)
@@ -81,6 +81,14 @@ export default class BasePage {
       await this.driver.sleep(250)
       return this.click(locator, retries - 1)
     }
+  }
+
+  async refresh (locator: WebDriverLocator, retries?: number = 3): Promise<WebDriverElement> {
+    await this.driver.sleep(1700)
+    await this.driver.get(this.driver.getCurrentUrl())
+    await waitForLocated(this.driver, locator, retries)
+    await waitForVisible(this.driver, locator, retries)
+    return this.driver.findElement(locator)
   }
 
 }

@@ -7,6 +7,7 @@ import DriverBuilder from './lib/DriverBuilder'
 import driverutils from './lib/driver-utils'
 
 describe('e2e Tests', function () {
+  // let capabilities = ['firefox', 'chrome']
   let capabilities = ['firefox']
   let browsers
 
@@ -20,12 +21,15 @@ describe('e2e Tests', function () {
     }
   })
 
-  it('Loads the page', async function () {
+  it('write something', async function () {
     for (let browser of browsers) {
       const homePage = new HomePage(browser.driver)
+      const something = 'something'
       await homePage.isLoaded()
-      const content = await homePage.getContent()
-      assert.strictEqual(content, '', 'Content should be empty')
+      await homePage.setEditorText(something)
+      await homePage.reload()
+      const content = await homePage.getEditorText()
+      assert.strictEqual(content, something, 'Should have something written')
     }
   })
 

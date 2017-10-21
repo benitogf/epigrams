@@ -10,7 +10,16 @@ export default class HomePage extends BasePage {
     await this.waitForDisplayed(CONTENT)
   }
 
-  async getContent () {
+  async getEditorText () {
     return this.getText(CONTENT)
   }
+
+  async setEditorText(text) {
+    return this.sendKeys(CONTENT, text)
+  }
+
+  async reload() {
+    return this.refresh(CONTENT)
+  }
+
 }
