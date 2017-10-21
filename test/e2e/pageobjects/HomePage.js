@@ -3,6 +3,9 @@ import { By } from 'selenium-webdriver'
 import BasePage from './BasePage'
 
 const CONTENT = By.css('.ql-editor')
+const STATUS = By.css('h3.status')
+const EMPTY = ''
+const LOADING = '⢀⠀'
 
 export default class HomePage extends BasePage {
 
@@ -20,6 +23,14 @@ export default class HomePage extends BasePage {
 
   async reload() {
     return this.refresh(CONTENT)
+  }
+
+  async statusClear() {
+    return this.waitForTextToBe(STATUS, EMPTY)
+  }
+
+  async statusLoading() {
+    return this.waitForTextToBe(STATUS, LOADING)
   }
 
 }

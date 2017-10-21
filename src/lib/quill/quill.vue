@@ -39,9 +39,11 @@ function loaderStart (self) {
 }
 
 function loaderStop (self) {
-  clearInterval(self.loading)
-  self.status = ''
-  self.loading = null
+  setTimeout(function () {
+    clearInterval(self.loading)
+    self.status = ''
+    self.loading = null
+  }, 600)
 }
 
 function debounce (inner, ms = 0) {

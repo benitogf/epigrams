@@ -1,6 +1,21 @@
 // @flow
 import { until } from 'selenium-webdriver'
 
+async function waitForText (driver: WebDriverClass, locator: WebDriverLocator, text: string, retries?: number = 300): Promise<void> {
+  let states = ''
+  try {
+    const element = await driver.findElement(locator)
+    states += element.getText()
+    await driver.wait(until.elementTextIs(element, text), 7000)
+  } catch (err) {
+    if (retries === 0) {
+      throw new Error(`Element ${locator.toString()} text still not equal to: "${text}", found: "${states}", after maximum retries, Error message: ${err.message.toString()}`)
+    }
+    await driver.sleep(50)
+    return waitForText(driver, locator, text, retries - 1)
+  }
+}
+
 async function waitForLocated (driver: WebDriverClass, locator: WebDriverLocator, retries?: number = 3): Promise<void> {
   try {
     await driver.wait(until.elementLocated(locator), 7000)
@@ -39,13 +54,17 @@ export default class BasePage {
     return this.driver.findElement(locator)
   }
 
+  async waitForTextToBe (locator: WebDriverLocator, text: string, retries?: number = 300): Promise<WebDriverElement> {
+    await waitForText(this.driver, locator, text, retries)
+    return this.driver.findElement(locator)
+  }
+
   async sendKeys (locator: WebDriverLocator, keys: string, retries?: number = 1): Promise<void> {
     try {
       const element = await this.driver.findElement(locator)
       await element.click()
       await element.clear()
-      await element.sendKeys(keys)
-      return
+      return element.sendKeys(keys)
     } catch (err) {
       if (retries === 0) {
         throw new Error(`Unable to send keys to ${locator.toString()} after maximum retries, error : ${err.message}`)
@@ -84,7 +103,7 @@ export default class BasePage {
   }
 
   async refresh (locator: WebDriverLocator, retries?: number = 3): Promise<WebDriverElement> {
-    await this.driver.sleep(1700)
+    // await this.driver.sleep(1700)
     await this.driver.get(this.driver.getCurrentUrl())
     await waitForLocated(this.driver, locator, retries)
     await waitForVisible(this.driver, locator, retries)

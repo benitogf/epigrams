@@ -5,6 +5,7 @@ import HomePage from './pageobjects/HomePage'
 
 import DriverBuilder from './lib/DriverBuilder'
 import driverutils from './lib/driver-utils'
+import something from './mock/something'
 
 describe('e2e Tests', function () {
   // let capabilities = ['firefox', 'chrome']
@@ -24,10 +25,14 @@ describe('e2e Tests', function () {
   it('write something', async function () {
     for (let browser of browsers) {
       const homePage = new HomePage(browser.driver)
-      const something = 'something'
       await homePage.isLoaded()
+      await homePage.statusClear()
       await homePage.setEditorText(something)
+      await homePage.statusLoading()
+      await homePage.statusClear()
       await homePage.reload()
+      await homePage.isLoaded()
+      await homePage.statusClear()
       const content = await homePage.getEditorText()
       assert.strictEqual(content, something, 'Should have something written')
     }
