@@ -1,4 +1,3 @@
-// @flow
 import jsonpack from 'jsonpack'
 const globKey = '6e6a5910ea9537a7d02e44975f4765726c4a0237c7132d3ea4cf33be76ce678b'
 

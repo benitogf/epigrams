@@ -1,4 +1,3 @@
-// @flow
 /**
  * Custom module for quilljs to allow user to drag images from their file system into the editor
  * and paste images from clipboard (Works on Chrome, Firefox, Edge, not on Safari)

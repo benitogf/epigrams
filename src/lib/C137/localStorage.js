@@ -1,4 +1,3 @@
-// @flow
 const localStorage = {
   create: async function () {
 

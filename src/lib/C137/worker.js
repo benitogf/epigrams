@@ -1,4 +1,3 @@
-// @flow
 import jsonpack from 'jsonpack'
 import aes from 'browserify-aes'
 import createHash from 'sha.js'

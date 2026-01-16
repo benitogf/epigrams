@@ -1,6 +1,5 @@
-// @flow
-import { localStorage } from '@/lib/C137/localStorage'
-import { indexedDB } from '@/lib/C137/indexedDB'
+import { localStorage } from './localStorage'
+import { indexedDB } from './indexedDB'
 import Dexie from 'dexie'
 
 class C137 {
