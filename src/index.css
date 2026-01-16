@@ -1,0 +1,168 @@
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  min-height: 100%;
+  overflow-y: hidden;
+  background-color: #1a1a1a;
+}
+
+#root {
+  height: 100%;
+}
+
+.slide-fade-enter {
+  transform: translateX(15px);
+  opacity: 0;
+}
+
+.slide-fade-enter-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition: all 0.5s ease;
+}
+
+@media print {
+  p {
+    orphans: 4;
+  }
+  ol, ul {
+    break-inside: avoid;
+  }
+  .ql-toolbar, .ql-toolbar * {
+    display: none !important;
+  }
+  .ql-container, .ql-editor {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    zoom: 0.99;
+    background-color: white !important;
+    color: black !important;
+  }
+}
+
+.vue-quill {
+  height: auto;
+  min-height: 100%;
+  padding: 0;
+  height: inherit;
+}
+
+.vue-quill .ql-toolbar {
+  position: fixed;
+  z-index: 4;
+  width: 100%;
+  border: none !important;
+  background-color: #252525;
+}
+
+.vue-quill .ql-toolbar .ql-stroke {
+  stroke: #e0e0e0;
+}
+
+.vue-quill .ql-toolbar .ql-fill {
+  fill: #e0e0e0;
+}
+
+.vue-quill .ql-toolbar .ql-picker-label {
+  color: #e0e0e0;
+}
+
+.vue-quill .ql-toolbar button:hover .ql-stroke,
+.vue-quill .ql-toolbar .ql-picker-label:hover .ql-stroke {
+  stroke: #888;
+}
+
+.vue-quill .ql-toolbar button:hover .ql-fill,
+.vue-quill .ql-toolbar .ql-picker-label:hover .ql-fill {
+  fill: #888;
+}
+
+.vue-quill .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #888;
+}
+
+.vue-quill .ql-toolbar button.ql-active .ql-fill {
+  fill: #888;
+}
+
+.vue-quill .ql-toolbar .ql-picker-options {
+  background-color: #252525;
+  border: 1px solid #333;
+}
+
+.vue-quill .ql-toolbar .ql-picker-item {
+  color: #e0e0e0;
+}
+
+.vue-quill .ql-toolbar .ql-picker-item:hover {
+  color: #fff;
+  background-color: #333;
+}
+
+.vue-quill .ql-toolbar .ql-picker-item.ql-selected {
+  color: #fff;
+}
+
+.vue-quill .ql-container {
+  border: none !important;
+  padding-top: 41px;
+  background-color: #1a1a1a;
+}
+
+.vue-quill .ql-toolbar {
+  border: none;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.vue-quill .ql-editor {
+  font-size: 18px;
+  overflow-y: scroll;
+  padding: 12px 15px 70px 15px;
+  color: #e0e0e0;
+  background-color: #1a1a1a;
+}
+
+.vue-quill .ql-editor::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+}
+
+.vue-quill .ql-editor::-webkit-scrollbar {
+  width: 10px;
+  background-color: #1a1a1a;
+}
+
+.vue-quill .ql-editor::-webkit-scrollbar-thumb {
+  background-color: #333;
+}
+
+.vue-quill .ql-editor.ql-blank::before {
+  color: #666;
+  font-style: italic;
+}
+
+.status {
+  padding-top: 5px;
+  position: fixed;
+  top: 0;
+  width: 60px;
+  height: 35px;
+  color: transparent;
+  background-color: transparent;
+  margin: 0;
+  right: 0;
+  text-align: center;
+  z-index: 999;
+  font-size: 14px;
+  line-height: 30px;
+}
+
+.status.active {
+  background-color: #252525;
+  color: #aaa;
+}

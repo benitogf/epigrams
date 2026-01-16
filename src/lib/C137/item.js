@@ -1,5 +1,4 @@
-// @flow
-import { C137 } from '@/lib/C137/C137'
+import { C137 } from './C137'
 
 const item = {
   async set (item) {

@@ -1,6 +1,5 @@
-// @flow
-import { Item } from '@/lib/C137/item'
-import { session } from '@/lib/C137/session'
+import { Item } from './item'
+import { session } from './session'
 
 const hub = {
   async set (hub) {

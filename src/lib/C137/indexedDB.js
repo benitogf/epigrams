@@ -1,4 +1,3 @@
-// @flow
 const indexedDB = {
   create: async function () {
 

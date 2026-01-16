@@ -1,41 +1,41 @@
 # epigrams
 
-[![Build Status][build-image]][build-url]
+[![Tests](https://github.com/benitogf/epigrams/actions/workflows/test.yml/badge.svg)](https://github.com/benitogf/epigrams/actions/workflows/test.yml)
 
-[build-url]: https://travis-ci.org/benitogf/epigrams
-[build-image]: https://img.shields.io/travis/benitogf/epigrams/master.svg?style=flat-square
+A local-first rich text editor with encrypted persistence using IndexedDB.
 
-> A Vue.js project
+## Features
 
-## Build Setup
+- **Rich text editing** with Quill editor
+- **Local persistence** - data stored in browser's IndexedDB
+- **Encrypted storage** - content encrypted with AES-256
+- **Dark theme** interface
+- **Offline-capable** - works without internet connection
 
-``` bash
-# install dependencies
+## Development
+
+```bash
+# Install dependencies
 npm install
 
-# serve with hot reload at localhost:8080
-npm start
+# Start dev server at localhost:5173
+npm run dev
 
-# build for production
+# Build for production (outputs to docs/)
 npm run build
 
-# build library
-npm run build:lib
+# Run unit tests
+npm run test
 
-# serve production at localhost:9009
-npm run serve
-
-# run unit tests
-npm run unit
-
-# run e2e tests
-npm run drive
-npm run build
-npm run serve
-npm run e2e
-
-# run all tests
-npm test
+# Run E2E tests (requires Firefox)
+npm run test:e2e
 ```
 
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+## Tech Stack
+
+- **Vite** - Build tool
+- **React 18** - UI framework
+- **Quill 2** - Rich text editor
+- **Dexie** - IndexedDB wrapper
+- **Vitest** - Unit testing
+- **Playwright** - E2E testing
