@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.worker.config.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -14,18 +14,23 @@
   },
   "dependencies": {
     "browserify-aes": "^1.2.0",
+    "buffer": "^6.0.3",
     "cli-spinners": "^3.2.0",
     "dexie": "^4.0.10",
+    "events": "^3.3.0",
     "jsonpack": "^1.1.5",
     "lodash": "^4.17.21",
     "quill": "^2.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sha.js": "^2.4.11"
+    "sha.js": "^2.4.11",
+    "stream-browserify": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.49.1",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@vitejs/plugin-react": "^5.1.2",
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.2",

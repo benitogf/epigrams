@@ -1,6 +1,9 @@
+import { Buffer } from 'buffer'
 import jsonpack from 'jsonpack'
 import aes from 'browserify-aes'
 import createHash from 'sha.js'
+
+globalThis.Buffer = Buffer
 const session = {
   encrypt (txt, pwd) {
     try {
@@ -42,17 +45,20 @@ const session = {
 
   unpack (data, keyword) {
     let dec = session.decrypt(data, keyword)
+    if (dec === false) {
+      return false
+    }
     return session.uncompress(dec)
   }
 }
 
-global.onmessage = function (e) {
+self.onmessage = function (e) {
   var args = session.uncompress(e.data)
   var workerResult = null
   try {
     workerResult = session[args.action](args.data, args.password)
-  } catch (e) {
-    throw e
+  } catch (err) {
+    throw err
   }
 
   postMessage({ result: workerResult, id: args.now })
