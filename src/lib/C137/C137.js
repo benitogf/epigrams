@@ -6,7 +6,7 @@ class C137 {
   constructor (opt) {
     try {
       if (window.Worker) {
-        window.sessionWorker = new Worker('/static/worker.js')
+        window.sessionWorker = new Worker('./static/worker.js')
       }
       this.name = (opt && opt.name) ? opt.name : 'c137'
       this.version = (opt && opt.version) ? opt.version : 1
