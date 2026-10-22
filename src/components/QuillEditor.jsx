@@ -1,15 +1,27 @@
 import { useRef, useEffect, useState } from 'react'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
-import { ImageDrop } from '../lib/quill/formats/image-drop'
 import wh from '../lib/C137'
 import spinners from 'cli-spinners'
 
 const freq = 80
 
-Quill.register({
-  'modules/imageDrop': ImageDrop
-})
+// image types accepted on paste/drop by quill's uploader module
+const imageMimetypes = [
+  'image/png', 'image/jpeg', 'image/gif', 'image/webp',
+  'image/svg+xml', 'image/bmp', 'image/apng', 'image/vnd.microsoft.icon'
+]
+
+// pasted text keeps its formatting but not its colors, which may be unreadable here
+function stripColors(node, delta) {
+  delta.ops.forEach(op => {
+    if (op.attributes) {
+      delete op.attributes.color
+      delete op.attributes.background
+    }
+  })
+  return delta
+}
 
 function debounce(inner, ms = 0) {
   let timer = null
@@ -149,14 +161,18 @@ function QuillEditor({ id }) {
       loaderStart()
       
       await wh.hub.upsert('public', 'public')
-      
+      // StrictMode runs the effect twice, only the mounted run creates the editor
+      if (!mounted) return
+
       const quill = new Quill(editorRef.current, {
         modules: {
-          imageDrop: true,
+          uploader: { mimetypes: imageMimetypes },
+          clipboard: { matchers: [[Node.ELEMENT_NODE, stripColors]] },
           toolbar: {
             container: [
               [{ list: 'ordered' }, { list: 'bullet' }, { align: [false, 'center', 'right', 'justify'] }],
               ['bold', 'italic', 'underline'],
+              [{ color: [] }, { background: [] }, 'clean'],
               ['image', 'print']
             ],
             handlers: {
